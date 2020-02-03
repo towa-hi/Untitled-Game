@@ -153,29 +153,36 @@ public class BoardManager : MonoBehaviour {
     // this traveluproot and traveldownroot is testing to see if this tree of block is movable or attached to an anchor. 
     // if there are any falses in the testCol it means the whole tree is unmovable from that direction
     // does not explore past the initial tree yet
-    
+
     public void TravelUpRoot(BlockObject rootBlock) {
-        Dictionary<int, bool> testCols = new Dictionary<int, bool>();
-        TravelUp(rootBlock);
-        string testOutput = "";
+        // testCols is a dict of x values and whether or not that column is blocked or not
+        Dictionary<int, bool> testCols = new Dictionary<int, bool>();       
+        // start recursive function
+        TravelUp(rootBlock);    
+        //debug shit
+        string testOutput = "";     
         foreach (KeyValuePair<int, bool> kvp in testCols) {
             testOutput += kvp.Key.ToString() + " " + kvp.Value.ToString() + " ";
         }
         print(testOutput);
     
         void TravelUp(BlockObject block) {
+            // set of blocks above this block 
             HashSet<BlockObject> rootSet = new HashSet<BlockObject>();
             for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
-                testCols[x] = true;
+                // iterate thru x vals for the length of the block and make currentPos 1 y above the top of the block
                 Vector2Int currentPos = new Vector2Int(x, block.pos.y + block.blockData.size.y);
+                // coodinates to draw some debug lines
                 Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y - 0.25f, -1);
                 Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.25f, -1);
+                // returns null if no block else returns a block at that location
                 BlockObject maybeABlock = GetBlockOnPosition(currentPos);
                 if (maybeABlock != null) {
                     switch (maybeABlock.blockData.type) {
                         case BlockTypeEnum.FREE:
                             Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.white, 10f);
                             TravelUp(maybeABlock);
+                            testCols[x] = true;
                             break;
                         case BlockTypeEnum.FIXED:
                             Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.red, 10f);
@@ -184,7 +191,6 @@ public class BoardManager : MonoBehaviour {
                     }
                 }
             }
-            
         }
     }
 
