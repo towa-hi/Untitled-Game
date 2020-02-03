@@ -21,9 +21,22 @@ public class BlockObject : MonoBehaviour
             this.color = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
         }
         GetComponent<Renderer>().material.color = color;
-        gameObject.name = "Block (" + blockData.size.x + "x" + blockData.size.y + ")";
+        gameObject.name = "Block (" + blockData.size.x + "x" + blockData.size.y + ") color " + color.ToString();
     }
 
+    public void SetState(BlockStateEnum newStateEnum) {
+        stateEnum = newStateEnum;
+        switch (newStateEnum) {
+            case BlockStateEnum.ACTIVE:
+                GetComponent<Renderer>().material.color = color;
+                break;
+            case BlockStateEnum.GHOST:
+                GetComponent<Renderer>().material.color = Color.green;
+                break;
+            case BlockStateEnum.NONE:
+                break;
+        }
+    }
     //debug
     // void OnMouseEnter() {
     //     Highlight();

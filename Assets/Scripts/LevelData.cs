@@ -21,6 +21,14 @@ public class LevelData : ScriptableObject {
         AddTestBlock(3,1,3,3, BlockTypeEnum.FIXED, testLevel.blockDataDict);
         AddTestBlock(2,1,3,7, BlockTypeEnum.FREE, testLevel.blockDataDict);
         AddTestBlock(3,2,5,7, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,1,3,8, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(3,1,4,9, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,1,7,9, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,2,2,5, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,1,8,8, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(1,1,9,9, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,1,1,7, BlockTypeEnum.FREE, testLevel.blockDataDict);
+        AddTestBlock(2,1,0,8, BlockTypeEnum.FIXED, testLevel.blockDataDict);
         return testLevel;
     }
 

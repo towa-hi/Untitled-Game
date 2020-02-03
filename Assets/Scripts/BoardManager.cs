@@ -41,24 +41,24 @@ public class BoardManager : MonoBehaviour {
         switch (mouseState) {
             case MouseStateEnum.DEFAULT:
                 selectedBlock = null;
-                UnHighlightSelected();
+                UnGhostSelected();
                 selectedList.Clear();
                 break;
             case MouseStateEnum.CLICKED:
                 if (mousePos.y < clickedPosition.y - 0.5) {
                     //dragging down
                     mouseState = MouseStateEnum.HOLDING;
-                    selectedList.Add(selectedBlock);
                     //replace this with a recursive function later
-                    selectedList.AddRange(GetBelowBlocks(selectedBlock));
-                    HighlightSelected();
+                    TravelDownRoot(selectedBlock);
+                    // selectedList.AddRange(GetBelowBlocks(selectedBlock));
+                    GhostSelected();
                 } else if (mousePos.y > clickedPosition.y + 0.5) {
                     //dragging up
                     mouseState = MouseStateEnum.HOLDING;
-                    selectedList.Add(selectedBlock);
                     //replace this with a recursive function later
-                    selectedList.AddRange(GetAboveBlocks(selectedBlock));
-                    HighlightSelected();
+                    TravelUpRoot(selectedBlock);
+                    // selectedList.AddRange(GetAboveBlocks(selectedBlock));
+                    GhostSelected();
                 }
                 break;
             case MouseStateEnum.HOLDING:
@@ -75,6 +75,18 @@ public class BoardManager : MonoBehaviour {
     void UnHighlightSelected() {
         foreach (BlockObject block in selectedList) {
             block.UnHighlight();
+        }
+    }
+
+    void GhostSelected() {
+        foreach (BlockObject block in selectedList) {
+            block.SetState(BlockStateEnum.GHOST);
+        }
+    }
+
+    void UnGhostSelected() {
+        foreach (BlockObject block in selectedList) {
+            block.SetState(BlockStateEnum.ACTIVE);
         }
     }
     void Awake() {
@@ -126,19 +138,164 @@ public class BoardManager : MonoBehaviour {
         return null;
     }
 
-    public List<BlockObject> GetAboveBlocks(BlockObject block) {
-        HashSet<BlockObject> aboveBlockSet = new HashSet<BlockObject>();
-        for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
-            Vector2Int currentPos = new Vector2Int(x, block.pos.y + block.blockData.size.y);
-            // print("checking" + currentPos);
+    // public List<BlockObject> GetSelection(bool isUp) {
+    //     HashSet<BlockObject> blockSet = new HashSet<BlockObject>();
+
+    //     switch (isUp) {
+    //         case true:
+    //             break;
+    //         case false:
+    //             break;
+    //     }
+    //     return blockSet.ToList();
+    // }
+    
+    // this traveluproot and traveldownroot is testing to see if this tree of block is movable or attached to an anchor. 
+    // if there are any falses in the testCol it means the whole tree is unmovable from that direction
+    // does not explore past the initial tree yet
+    
+    public void TravelUpRoot(BlockObject rootBlock) {
+        Dictionary<int, bool> testCols = new Dictionary<int, bool>();
+        TravelUp(rootBlock);
+        string testOutput = "";
+        foreach (KeyValuePair<int, bool> kvp in testCols) {
+            testOutput += kvp.Key.ToString() + " " + kvp.Value.ToString() + " ";
+        }
+        print(testOutput);
+    
+        void TravelUp(BlockObject block) {
+            HashSet<BlockObject> rootSet = new HashSet<BlockObject>();
+            for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
+                testCols[x] = true;
+                Vector2Int currentPos = new Vector2Int(x, block.pos.y + block.blockData.size.y);
+                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y - 0.25f, -1);
+                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.25f, -1);
+                BlockObject maybeABlock = GetBlockOnPosition(currentPos);
+                if (maybeABlock != null) {
+                    switch (maybeABlock.blockData.type) {
+                        case BlockTypeEnum.FREE:
+                            Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.white, 10f);
+                            TravelUp(maybeABlock);
+                            break;
+                        case BlockTypeEnum.FIXED:
+                            Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.red, 10f);
+                            testCols[x] = false;
+                            break;
+                    }
+                }
+            }
+            
+        }
+    }
+
+    public void TravelDownRoot(BlockObject rootBlock) {
+        Dictionary<int, bool> testCols = new Dictionary<int, bool>();
+        TravelDown(rootBlock);
+        string testOutput = "";
+        foreach (KeyValuePair<int, bool> kvp in testCols) {
+            testOutput += kvp.Key.ToString() + " " + kvp.Value.ToString() + " ";
+        }
+        print(testOutput);
+    
+        void TravelDown(BlockObject block) {
+            HashSet<BlockObject> rootSet = new HashSet<BlockObject>();
+            for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
+                testCols[x] = true;
+                Vector2Int currentPos = new Vector2Int(x, block.pos.y - 1);
+                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y + 1.25f, -1);
+                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.75f, -1);
+                BlockObject maybeABlock = GetBlockOnPosition(currentPos);
+                if (maybeABlock != null) {
+                    switch (maybeABlock.blockData.type) {
+                        case BlockTypeEnum.FREE:
+                            Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.yellow, 10f);
+                            TravelDown(maybeABlock);
+                            break;
+                        case BlockTypeEnum.FIXED:
+                            Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.red, 10f);
+                            testCols[x] = false;
+                            break;
+                    }
+                }
+            }
+            
+        }
+    }
+
+    public List<BlockObject> GetAboveBlocks(BlockObject rootBlock) {
+        print("GetAboveBlocks started with" + rootBlock.name);
+        // make a  set for all the blocks  found
+        HashSet<BlockObject> blockSet = new HashSet<BlockObject>();
+        // if block is fixed return empty list
+        if (rootBlock.blockData.type == BlockTypeEnum.FIXED) {
+            print("YOU SELECTED A FIXED BLOCK");
+            return blockSet.ToList();
+        }
+        // add root block
+        blockSet.Add(rootBlock);
+
+        HashSet<BlockObject> rootAbove = new HashSet<BlockObject>();
+        for (int x = rootBlock.pos.x; x < rootBlock.pos.x + rootBlock.blockData.size.x; x++) {
+            Vector2Int currentPos = new Vector2Int(x, rootBlock.pos.y + rootBlock.blockData.size.y);
             BlockObject maybeABlock = GetBlockOnPosition(currentPos);
             if (maybeABlock != null) {
-                print(maybeABlock.name);
-                aboveBlockSet.Add(maybeABlock);
+                if (maybeABlock.blockData.type == BlockTypeEnum.FREE) {
+                    // add this block to above set for root
+                  rootAbove.Add(maybeABlock);
+                }
+                
             }
         }
-        return aboveBlockSet.ToList();
+        // add blocks above current block to blockset
+        blockSet.UnionWith(rootAbove);
+
+        // blockset should now contain the root block and all the blocks above it
+        // rootAbove should now contain only the blocks above root
+
+        // for each block above root
+        foreach (BlockObject currentBlock in rootAbove) {
+            if (currentBlock.blockData.type == BlockTypeEnum.FREE) {
+                Debug.DrawLine(rootBlock.transform.position + new Vector3(0,0,-1), currentBlock.transform.position + new Vector3(0,0,-1), Color.blue, 5f);
+               GetAboveRecursive(currentBlock);
+            }
+        }
+        return blockSet.ToList();
+
+        // this recursive function mutates 
+        void GetAboveRecursive(BlockObject block) {
+            print("executed GetAboveBlock on " + block.name);
+            HashSet<BlockObject> aboveBlockSet = new HashSet<BlockObject>();
+            for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
+                Vector2Int currentPos = new Vector2Int(x, block.pos.y + block.blockData.size.y);
+                // print("checking" + currentPos);
+                BlockObject maybeABlock = GetBlockOnPosition(currentPos);
+                if (maybeABlock != null) {
+                    if (maybeABlock.blockData.type == BlockTypeEnum.FREE) {
+                        // add this block to above set for root
+                        aboveBlockSet.Add(maybeABlock);
+                    }
+                }
+            }
+            // aboveBlockSet now has all the blocks above this one
+            blockSet.UnionWith(aboveBlockSet);
+            // now do it recursively
+            foreach (BlockObject currentBlock in aboveBlockSet) {
+                Debug.DrawLine(block.transform.position + new Vector3(0,0,-1), currentBlock.transform.position + new Vector3(0,0,-1), Color.red, 5f);
+                GetAboveRecursive(currentBlock);
+            }
+        }
     }
+
+
+
+
+
+
+
+
+
+
+
 
     public List<BlockObject> GetBelowBlocks(BlockObject block) {
         HashSet<BlockObject> belowBlockSet = new HashSet<BlockObject>();
