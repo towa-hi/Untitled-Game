@@ -173,16 +173,16 @@ public class BoardManager : MonoBehaviour {
                 // iterate thru x vals for the length of the block and make currentPos 1 y above the top of the block
                 Vector2Int currentPos = new Vector2Int(x, block.pos.y + block.blockData.size.y);
                 // coodinates to draw some debug lines
-                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y - 0.25f, -1);
-                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.25f, -1);
+                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y - 0.25f, -0.51f);
+                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.25f, -0.51f);
                 // returns null if no block else returns a block at that location
                 BlockObject maybeABlock = GetBlockOnPosition(currentPos);
                 if (maybeABlock != null) {
                     switch (maybeABlock.blockData.type) {
                         case BlockTypeEnum.FREE:
                             Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.white, 10f);
-                            TravelUp(maybeABlock);
                             testCols[x] = true;
+                            TravelUp(maybeABlock);
                             break;
                         case BlockTypeEnum.FIXED:
                             Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.red, 10f);
@@ -206,15 +206,15 @@ public class BoardManager : MonoBehaviour {
         void TravelDown(BlockObject block) {
             HashSet<BlockObject> rootSet = new HashSet<BlockObject>();
             for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
-                testCols[x] = true;
                 Vector2Int currentPos = new Vector2Int(x, block.pos.y - 1);
-                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y + 1.25f, -1);
-                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.75f, -1);
+                Vector3 currentPosLineOrigin = new Vector3(currentPos.x + 0.5f, currentPos.y + 1.25f, -0.51f);
+                Vector3 currentPosLineDestination = new Vector3(currentPos.x + 0.5f, currentPos.y + 0.75f, -0.51f);
                 BlockObject maybeABlock = GetBlockOnPosition(currentPos);
                 if (maybeABlock != null) {
                     switch (maybeABlock.blockData.type) {
                         case BlockTypeEnum.FREE:
                             Debug.DrawLine(currentPosLineOrigin, currentPosLineDestination, Color.yellow, 10f);
+                            testCols[x] = true;
                             TravelDown(maybeABlock);
                             break;
                         case BlockTypeEnum.FIXED:
