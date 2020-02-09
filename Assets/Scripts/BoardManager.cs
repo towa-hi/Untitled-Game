@@ -28,16 +28,6 @@ public class BoardManager : MonoBehaviour {
         this.levelData = LevelData.GenerateTestLevel();          // make test level
         LoadLevelData(this.levelData);
         // DestroyMarkers();
-        void CreateMarkers() {
-            for (int x = 0; x < this.BOARDHEIGHT; x++) {
-                for (int y = 0; y < this.BOARDWIDTH; y++) {
-                    GameObject marker = Instantiate(this.markerMaster, new Vector3(x,y,0f), Quaternion.identity, transform);
-                    marker.name = "(" + marker.transform.position.x + ", " + marker.transform.position.y + ")";
-                    Vector2Int pos = new Vector2Int(x,y);
-                    this.markerDict[pos] = marker;
-                }
-            }
-        }
     }
 
     void Start() {
@@ -78,6 +68,17 @@ public class BoardManager : MonoBehaviour {
                 break;
             case MouseStateEnum.HOLDING:
                 break;
+        }
+    }
+
+    void CreateMarkers() {
+        for (int x = 0; x < this.BOARDHEIGHT; x++) {
+            for (int y = 0; y < this.BOARDWIDTH; y++) {
+                GameObject marker = Instantiate(this.markerMaster, new Vector3(x,y,0f), Quaternion.identity, transform);
+                marker.name = "(" + marker.transform.position.x + ", " + marker.transform.position.y + ")";
+                Vector2Int pos = new Vector2Int(x,y);
+                this.markerDict[pos] = marker;
+            }
         }
     }
 
@@ -160,9 +161,7 @@ public class BoardManager : MonoBehaviour {
                 if (!treeUpList.Contains(hangerBlock)) {
                     if(!IsConnectedToFixed(hangerBlock, treeUpList)) {
                         selectUpList.Add(hangerBlock);
-                        print("SelectUp added " + hangerBlock + " to selection");
                         foreach (BlockObject hangerConnectedBlock in GetBlocksConnected(hangerBlock, selectUpList)) {
-                            print("SelectUp foreach added " + hangerConnectedBlock + " to selection");
                             selectUpList.Add(hangerConnectedBlock);
                         }
                     }
@@ -200,7 +199,6 @@ public class BoardManager : MonoBehaviour {
 
         void treeUpRecursive(BlockObject block, List<BlockObject> list) {
             list.Add(block);
-            print("treeUpRecursive added " + block + " to selection");
             foreach (BlockObject currentBlock in GetBlocksAbove(block)) {
                 if (currentBlock.blockData.type == BlockTypeEnum.FREE && !list.Contains(currentBlock)) {
                     treeUpRecursive(currentBlock, list);
