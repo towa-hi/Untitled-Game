@@ -8,8 +8,10 @@ public class BlockObject : MonoBehaviour
     public Vector2Int pos;
     public BlockStateEnum stateEnum;
     public Color color;
+    public bool isChecked;
 
     public void Init(BlockData blockData, BlockState blockState) {
+        this.isChecked = false;
         this.blockData = blockData;
         this.pos = new Vector2Int(blockState.pos.x, blockState.pos.y);
         this.stateEnum = blockState.stateEnum;
@@ -50,13 +52,12 @@ public class BlockObject : MonoBehaviour
         StartCoroutine(MoveCoroutine(pos));
     }
 
-    public void Highlight() {
-        print("highlighted");
-        GetComponent<Renderer>().material.color = Color.red;
+    public void Highlight(Color color) {
+        GetComponent<Renderer>().material.color = color;
     }
 
     public void UnHighlight() {
-        GetComponent<Renderer>().material.color = color;
+        GetComponent<Renderer>().material.color = this.color;
     }
 
     public bool CheckSelfPos(Vector2Int pos) {
