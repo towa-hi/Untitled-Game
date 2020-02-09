@@ -17,13 +17,13 @@ public class BlockObject : MonoBehaviour
         this.stateEnum = blockState.stateEnum;
         Vector3 thiccness = new Vector3(0,0,1f);
         transform.localScale = GameUtil.V2IToV3(blockData.size) + thiccness;
-        if (blockData.type == BlockTypeEnum.FIXED) {
+        if (this.blockData.type == BlockTypeEnum.FIXED) {
             this.color = Color.black;
         } else {
             this.color = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
         }
         GetComponent<Renderer>().material.color = color;
-        gameObject.name = "Block (" + blockData.size.x + "x" + blockData.size.y + ") color " + color.ToString();
+        gameObject.name = "Block (" + this.blockData.size.x + "x" + this.blockData.size.y + ") color " + color.ToString();
     }
 
     public void SetState(BlockStateEnum newStateEnum) {
@@ -69,7 +69,7 @@ public class BlockObject : MonoBehaviour
     }
 
     public IEnumerator MoveCoroutine(Vector2Int pos) {
-        Vector3 targetPos = GameUtil.V2IOffsetV3(blockData.size, pos);
+        Vector3 targetPos = GameUtil.V2IOffsetV3(this.blockData.size, pos);
         Vector3 currentPos = transform.position;
         this.pos = pos;
         float t = 0f;

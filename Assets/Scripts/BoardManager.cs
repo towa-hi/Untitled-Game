@@ -5,86 +5,36 @@ using UnityEngine;
 using System.Linq;
 
 public class BoardManager : MonoBehaviour {
+    // don't edit these in editor
     public LevelData levelData;
     public int strokes = 0;
     public List<BlockObject> blockList;
-    // List<EntityObject> entityList;
-
     public List<BlockObject> selectedList;
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
     public Vector3 mousePos;
     public Vector3 clickedPosition;
+    public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
 
+    int BOARDHEIGHT = 20;
+    int BOARDWIDTH = 20;
     //set by editor
     public GameObject markerMaster;
     public BlockObject blockObjectMaster;
     public GameObject background;
-    int BOARDHEIGHT = 20;
-    int BOARDWIDTH = 20;
-    public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
-
-    void Update() {
-        RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray,out hit, Mathf.Infinity)) {
-            mousePos = new Vector3(hit.point.x, hit.point.y, hit.point.z);
-        }
-        if (Input.GetMouseButtonDown(0)) {
-            //if first time mouse clicked
-            if  (mouseState == MouseStateEnum.DEFAULT) {
-                mouseState = MouseStateEnum.CLICKED;
-                clickedPosition = mousePos;
-                selectedBlock = GetBlockOnPosition(GameUtil.V3ToV2I(mousePos));
-            } 
-        } else if (Input.GetMouseButtonUp(0)) {
-            //if not clicked
-            mouseState = MouseStateEnum.DEFAULT;
-        }
-        switch (mouseState) {
-            case MouseStateEnum.DEFAULT:
-                selectedBlock = null;
-                UnGhostSelected();
-                selectedList.Clear();
-                break;
-            case MouseStateEnum.CLICKED:
-                if (mousePos.y < clickedPosition.y - 0.5) {
-                    //dragging down
-                    mouseState = MouseStateEnum.HOLDING;
-                    //replace this with a recursive function later
-                    // IsObstructed(selectedBlock, false);
-                    
-                    // selectedList.AddRange(GetBelowBlocks(selectedBlock));
-                    GhostSelected();
-                } else if (mousePos.y > clickedPosition.y + 0.5) {
-                    //dragging up
-                    mouseState = MouseStateEnum.HOLDING;
-                    //replace this with a recursive function later
-                    selectedList = SelectUp(selectedBlock);
-                    HighlightSelected();
-                    // selectedList.AddRange(GetAboveBlocks(selectedBlock));
-                    GhostSelected();
-                }
-                break;
-            case MouseStateEnum.HOLDING:
-                break;
-        }
-    }
-
-
-
+    
     void Awake() {
         CreateMarkers();
-        levelData = LevelData.GenerateTestLevel();          // make test level
-        LoadLevelData(levelData);
+        this.levelData = LevelData.GenerateTestLevel();          // make test level
+        LoadLevelData(this.levelData);
         // DestroyMarkers();
         void CreateMarkers() {
-            for (int x = 0; x < BOARDHEIGHT; x++) {
-                for (int y = 0; y < BOARDWIDTH; y++) {
-                    GameObject marker = Instantiate(markerMaster, new Vector3(x,y,0f), Quaternion.identity, transform);
+            for (int x = 0; x < this.BOARDHEIGHT; x++) {
+                for (int y = 0; y < this.BOARDWIDTH; y++) {
+                    GameObject marker = Instantiate(this.markerMaster, new Vector3(x,y,0f), Quaternion.identity, transform);
                     marker.name = "(" + marker.transform.position.x + ", " + marker.transform.position.y + ")";
                     Vector2Int pos = new Vector2Int(x,y);
-                    markerDict[pos] = marker;
+                    this.markerDict[pos] = marker;
                 }
             }
         }
@@ -94,27 +44,75 @@ public class BoardManager : MonoBehaviour {
         print("started");
     }
 
+    void Update() {
+        this.mousePos = GetMousePos();
+        if (Input.GetMouseButtonDown(0)) {
+            //if first time mouse clicked
+            if  (this.mouseState == MouseStateEnum.DEFAULT) {
+                this.mouseState = MouseStateEnum.CLICKED;
+                this.clickedPosition = this.mousePos;
+                this.selectedBlock = GetBlockOnPosition(GameUtil.V3ToV2I(this.mousePos));
+            } 
+        } else if (Input.GetMouseButtonUp(0)) {
+            //if not clicked
+            this.mouseState = MouseStateEnum.DEFAULT;
+        }
+        switch (this.mouseState) {
+            case MouseStateEnum.DEFAULT:
+                this.selectedBlock = null;
+                UnGhostSelected();
+                this.selectedList.Clear();
+                break;
+            case MouseStateEnum.CLICKED:
+                if (this.mousePos.y > this.clickedPosition.y + 0.5) {
+                    //dragging up
+                    this.mouseState = MouseStateEnum.HOLDING;
+                    this.selectedList = SelectUp(this.selectedBlock);
+                    GhostSelected();
+                } else if (this.mousePos.y < this.clickedPosition.y - 0.5) {
+                    //dragging down
+                    this.mouseState = MouseStateEnum.HOLDING;
+                    this.selectedList = SelectDown(this.selectedBlock);
+                    GhostSelected();
+                }
+                break;
+            case MouseStateEnum.HOLDING:
+                break;
+        }
+    }
+
     void DestroyMarkers() {
-        GameObject[] destroyThis = GameObject.FindGameObjectsWithTag("Marker");
-        foreach (GameObject marker in destroyThis) {
+        GameObject[] destroyList = GameObject.FindGameObjectsWithTag("Marker");
+        foreach (GameObject marker in destroyList) {
             GameObject.Destroy(marker);
         }
     }
 
+    Vector3 GetMousePos() {
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray,out hit, Mathf.Infinity)) {
+            return new Vector3(hit.point.x, hit.point.y, hit.point.z);
+        } else {
+            return this.mousePos;
+        }
+
+    }
     void LoadLevelData(LevelData levelData) {
         foreach (KeyValuePair<BlockData, BlockState> pair in levelData.blockDataDict) {
-            blockList.Add(CreateBlockObject(pair.Key, pair.Value));
+            this.blockList.Add(CreateBlockObject(pair.Key, pair.Value));
         }
     }
 
     BlockObject CreateBlockObject(BlockData blockData, BlockState blockState) {
-        BlockObject newBlockObject = Instantiate(blockObjectMaster, GameUtil.V2IOffsetV3(blockData.size, blockState.pos), Quaternion.identity);
+        BlockObject newBlockObject = Instantiate(this.blockObjectMaster, GameUtil.V2IOffsetV3(blockData.size, blockState.pos), Quaternion.identity);
         newBlockObject.Init(blockData, blockState);
         return newBlockObject;
     }
 
+    // returns block occupying a grid position
     public BlockObject GetBlockOnPosition(Vector2Int pos) {
-        foreach (BlockObject block in blockList) {
+        foreach (BlockObject block in this.blockList) {
             if (block.CheckSelfPos(pos)) {
                 return block;
             }
@@ -123,33 +121,36 @@ public class BoardManager : MonoBehaviour {
     }
 
     public void SetMarkerColor(Vector2Int pos, Color color) {
-        markerDict[pos].GetComponent<Renderer>().material.color = color;
+        this.markerDict[pos].GetComponent<Renderer>().material.color = color;
     }
 
     void HighlightSelected() {
-        foreach (BlockObject block in selectedList) {
+        foreach (BlockObject block in this.selectedList) {
             block.Highlight(Color.red);
         }
     }
 
     void UnHighlightSelected() {
-        foreach (BlockObject block in selectedList) {
+        foreach (BlockObject block in this.selectedList) {
             block.UnHighlight();
         }
     }
 
     void GhostSelected() {
-        foreach (BlockObject block in selectedList) {
+        foreach (BlockObject block in this.selectedList) {
             block.SetState(BlockStateEnum.GHOST);
         }
     }
 
     void UnGhostSelected() {
-        foreach (BlockObject block in selectedList) {
+        foreach (BlockObject block in this.selectedList) {
             block.SetState(BlockStateEnum.ACTIVE);
         }
     }
 
+    // BLOCK SELECTION FUNCTIONS
+
+    // returns a list of blocks selected when dragging up on a block
     public List<BlockObject> SelectUp(BlockObject rootBlock) {
         List<BlockObject> treeUpList = TreeUp(rootBlock);
         List<BlockObject> selectUpList = new List<BlockObject>(treeUpList);
@@ -157,32 +158,50 @@ public class BoardManager : MonoBehaviour {
             List<BlockObject> currentBlockHangers = GetBlocksBelow(currentBlock);
             foreach (BlockObject hangerBlock in currentBlockHangers) {
                 if (!treeUpList.Contains(hangerBlock)) {
-                    print("selectUp looking at hanger: " + hangerBlock.name);
                     if(!IsConnectedToFixed(hangerBlock, treeUpList)) {
                         selectUpList.Add(hangerBlock);
-                        foreach(BlockObject hangerConnectedBlock in GetBlocksConnected(hangerBlock, selectUpList)) {
+                        print("SelectUp added " + hangerBlock + " to selection");
+                        foreach (BlockObject hangerConnectedBlock in GetBlocksConnected(hangerBlock, selectUpList)) {
+                            print("SelectUp foreach added " + hangerConnectedBlock + " to selection");
                             selectUpList.Add(hangerConnectedBlock);
                         }
                     }
-
                 }
             }
         }
         return selectUpList;
     }
 
+    // returns a list of blocks selected when dragging down on a block
+    public List<BlockObject> SelectDown(BlockObject rootBlock) {
+        List<BlockObject> treeDownList = TreeDown(rootBlock);
+        List<BlockObject> selectDownList = new List<BlockObject>(treeDownList);
+        foreach (BlockObject currentBlock in treeDownList) {
+            List<BlockObject> currentBlockHangers = GetBlocksAbove(currentBlock);
+            foreach (BlockObject hangerBlock in currentBlockHangers) {
+                if (!treeDownList.Contains(hangerBlock)) {
+                    if (!IsConnectedToFixed(hangerBlock, treeDownList)) {
+                        selectDownList.Add(hangerBlock);
+                        foreach (BlockObject hangerConnectedBlock in GetBlocksConnected(hangerBlock, selectDownList)) {
+                            selectDownList.Add(hangerConnectedBlock);
+                        }
+                    }
+                }
+            }
+        }
+        return selectDownList;
+    }
+
+    // returns a list of rootBlock + blocks that are above rootBlock or connected to a block above rootBlock
     public List<BlockObject> TreeUp(BlockObject rootBlock) {
         List<BlockObject> treeUpList = new List<BlockObject>();
         treeUpRecursive(rootBlock, treeUpList);
-        foreach(BlockObject block in treeUpList) {
-            print("treeUp contains: " + block.name);
-        }
-        return treeUpList.ToList();
+        return treeUpList;
 
         void treeUpRecursive(BlockObject block, List<BlockObject> list) {
             list.Add(block);
-            List<BlockObject> testList = GetBlocksAbove(block);
-            foreach(BlockObject currentBlock in GetBlocksAbove(block)) {
+            print("treeUpRecursive added " + block + " to selection");
+            foreach (BlockObject currentBlock in GetBlocksAbove(block)) {
                 if (currentBlock.blockData.type == BlockTypeEnum.FREE && !list.Contains(currentBlock)) {
                     treeUpRecursive(currentBlock, list);
                 }
@@ -190,6 +209,23 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
+    // returns a list of rootBlock + blocks that are below rootBlock or connected to a block below rootBlock
+    public List<BlockObject> TreeDown(BlockObject rootBLock) {
+        List<BlockObject> treeDownList = new List<BlockObject>();
+        treeDownRecursive(rootBLock, treeDownList);
+        return treeDownList;
+
+        void treeDownRecursive(BlockObject block, List<BlockObject> list) {
+            list.Add(block);
+            foreach (BlockObject currentBlock in GetBlocksBelow(block)) {
+                if (currentBlock.blockData.type == BlockTypeEnum.FREE && !list.Contains(currentBlock)) {
+                    treeDownRecursive(currentBlock, list);
+                }
+            }
+        }
+    }
+
+    // returns whether or not rootBlock has a connection to a fixed block
     public bool IsConnectedToFixed(BlockObject rootBlock, List<BlockObject> ignoreList) {
         bool isConnectedToFixed = false;
         List<BlockObject> ignoreListClone = new List<BlockObject>(ignoreList);
@@ -215,15 +251,21 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
+    // returns all blocks connected to this rootBlock while ignoring blocks inside ignoreList
     public List<BlockObject> GetBlocksConnected(BlockObject rootBlock, List<BlockObject> ignoreList) {
         List<BlockObject> connectedBlocks = new List<BlockObject>();
         List<BlockObject> ignoreListClone = new List<BlockObject>(ignoreList);
+        bool isRoot = true;
         GetBlocksConnectedRecursive(rootBlock, ignoreListClone);
         return connectedBlocks;
 
         void GetBlocksConnectedRecursive(BlockObject block, List<BlockObject> ignoreListX) {
-            ignoreListX.Add(block);
-            connectedBlocks.Add(block);
+            if (isRoot == false) {
+                ignoreListX.Add(block);
+                connectedBlocks.Add(block);
+            }
+            isRoot = false;
+            
             foreach (BlockObject aboveBlock in GetBlocksAbove(block)) {
                 if (!ignoreListX.Contains(aboveBlock)) {
                     GetBlocksConnectedRecursive(aboveBlock, ignoreListX);
@@ -237,6 +279,8 @@ public class BoardManager : MonoBehaviour {
         }
 
     }
+
+    // returns a list of blocks directly above block
     public List<BlockObject> GetBlocksAbove(BlockObject block) {
         HashSet<BlockObject> aboveSet = new HashSet<BlockObject>();
         for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
@@ -250,6 +294,7 @@ public class BoardManager : MonoBehaviour {
         return aboveSet.ToList();
     }
     
+    // returns a list of blocks directly below block
     public List<BlockObject> GetBlocksBelow(BlockObject block) {
         HashSet<BlockObject> belowSet = new HashSet<BlockObject>();
         for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
