@@ -13,9 +13,13 @@ public class BoardManager : MonoBehaviour {
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
     public Vector3 mousePos;
-    public Vector3 clickedPosition = new Vector3(0, 0, 0);
-    public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
 
+    public Vector3 clickedPosition = new Vector3(0, 0, 0);
+
+    public Vector2Int clickedPositionV2I = new Vector2Int(0, 0);
+    public Vector2Int clickOffsetV2I = new Vector2Int(0, 0);
+
+    public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
     //set by editor
     public GameObject markerMaster;
     public BlockObject blockObjectMaster;
@@ -38,8 +42,7 @@ public class BoardManager : MonoBehaviour {
 
     void Update() {
         this.mousePos = GetMousePos();
-
-        
+        DrawPathMouseToCenter();
 
         if (Input.GetMouseButtonDown(0)) {
             //if first time mouse clicked
@@ -84,23 +87,67 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
-    void MoveSelectionToMouse() {
-        foreach (BlockObject block in selectedList) {
-            block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, block.pos) + this.mousePos - this.clickedPosition;
-        }
+    Vector2Int MouseV2I() {
+
+        Vector2Int mouseV2I = new Vector2Int(0, 0);
+        return mouseV2I;
     }
+
+    void DrawPathMouseToCenter() {
+        Vector2Int centerGrid = GameUtil.V3ToV2I(mousePos);
+        Vector3 center = GameUtil.V2IToV3(centerGrid) + new Vector3(0.5f, 0.75f, 0);
+        Debug.DrawLine(mousePos + new Vector3(0,0,-1), center);
+    }
+
+    void MoveSelectionToMouse() {
+        clickedPositionV2I = GameUtil.V3ToV2I(clickedPosition);
+        clickOffsetV2I = GameUtil.V3ToV2I(this.mousePos - this.clickedPosition);
+        if (CheckSelectionOverlap(clickOffsetV2I)) {
+            foreach (BlockObject block in selectedList) {
+                block.Highlight(Color.blue);
+            }
+        } else {
+            foreach (BlockObject block in selectedList) {
+                block.Highlight(Color.red);
+            }
+        }
+        foreach (BlockObject block in selectedList) {
+            Vector3 newPosition = GameUtil.V2IOffsetV3(block.blockData.size, block.pos) + this.mousePos - this.clickedPosition;
+            newPosition.z = 0;
+            block.transform.position = newPosition;
+        }
+        
+    }
+
+
+    bool CheckSelectionOverlap(Vector2Int offset) {
+        foreach (BlockObject block in selectedList) {
+            for (int x = 0; x < block.blockData.size.x; x++) {
+                for (int y = 0; y < block.blockData.size.y; y++) {
+                    print(block.pos + offset + new Vector2Int(x, y));
+                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + offset + new Vector2Int(x, y));
+                    if (maybeABlock != null && !selectedList.Contains(maybeABlock)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
 
     void CreateBackground() {
         Vector3 backgroundOffset = new Vector3(0, 0, 0.55f);
         this.background = Instantiate(backgroundMaster, GameUtil.V2IOffsetV3(this.levelData.boardSize, new Vector2Int(0, 0)) + backgroundOffset, Quaternion.identity);
         this.background.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + new Vector3(0, 0, 0.1f);
     }
+
     void CreateMarkers() {
         for (int x = 0; x < this.levelData.boardSize.x; x++) {
             for (int y = 0; y < this.levelData.boardSize.y; y++) {
                 Vector3 realLocation = GameUtil.V2IToV3(new Vector2Int(x,y));
                 GameObject marker = Instantiate(this.markerMaster, realLocation, Quaternion.identity, transform);
-                marker.name = "(" + marker.transform.position.x + ", " + marker.transform.position.y + ")";
+                marker.name = "(" + x + ", " + y + ")";
                 Vector2Int pos = new Vector2Int(x,y);
                 this.markerDict[pos] = marker;
             }
