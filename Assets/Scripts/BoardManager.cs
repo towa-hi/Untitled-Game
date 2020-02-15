@@ -13,19 +13,21 @@ public class BoardManager : MonoBehaviour {
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
     public Vector3 mousePos;
-    public Vector3 clickedPosition;
+    public Vector3 clickedPosition = new Vector3(0, 0, 0);
     public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
 
-    int BOARDHEIGHT = 20;
-    int BOARDWIDTH = 20;
     //set by editor
     public GameObject markerMaster;
     public BlockObject blockObjectMaster;
-    public GameObject background;
+    public GameObject backgroundMaster;
     
+    public GameObject background;
+
     void Awake() {
-        CreateMarkers();
+        
         this.levelData = LevelData.GenerateTestLevel();          // make test level
+        CreateBackground();
+        CreateMarkers();
         LoadLevelData(this.levelData);
         // DestroyMarkers();
     }
@@ -36,6 +38,9 @@ public class BoardManager : MonoBehaviour {
 
     void Update() {
         this.mousePos = GetMousePos();
+
+        
+
         if (Input.GetMouseButtonDown(0)) {
             //if first time mouse clicked
             if  (this.mouseState == MouseStateEnum.DEFAULT) {
@@ -45,6 +50,7 @@ public class BoardManager : MonoBehaviour {
             } 
         } else if (Input.GetMouseButtonUp(0)) {
             //if not clicked
+            clickedPosition = new Vector3(0, 0, 0);
             this.mouseState = MouseStateEnum.DEFAULT;
         }
         switch (this.mouseState) {
@@ -54,27 +60,46 @@ public class BoardManager : MonoBehaviour {
                 this.selectedList.Clear();
                 break;
             case MouseStateEnum.CLICKED:
-                if (this.mousePos.y > this.clickedPosition.y + 0.5) {
-                    //dragging up
-                    this.mouseState = MouseStateEnum.HOLDING;
-                    this.selectedList = SelectUp(this.selectedBlock);
-                    GhostSelected();
-                } else if (this.mousePos.y < this.clickedPosition.y - 0.5) {
-                    //dragging down
-                    this.mouseState = MouseStateEnum.HOLDING;
-                    this.selectedList = SelectDown(this.selectedBlock);
-                    GhostSelected();
+                if (this.selectedBlock != null) {
+                    if (this.mousePos.y > this.clickedPosition.y + 0.5) {
+                        //dragging up
+                        if (!IsBlocked(true, selectedBlock)) {
+                            this.mouseState = MouseStateEnum.HOLDING;
+                            this.selectedList = SelectUp(this.selectedBlock);
+                            GhostSelected();
+                        }
+                    } else if (this.mousePos.y < this.clickedPosition.y - 0.5) {
+                        //dragging down
+                        if (!IsBlocked(false, selectedBlock)) {
+                            this.mouseState = MouseStateEnum.HOLDING;
+                            this.selectedList = SelectDown(this.selectedBlock);
+                            GhostSelected();
+                        }
+                    }
                 }
                 break;
             case MouseStateEnum.HOLDING:
+                MoveSelectionToMouse();
                 break;
         }
     }
 
+    void MoveSelectionToMouse() {
+        foreach (BlockObject block in selectedList) {
+            block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, block.pos) + this.mousePos - this.clickedPosition;
+        }
+    }
+
+    void CreateBackground() {
+        Vector3 backgroundOffset = new Vector3(0, 0, 0.55f);
+        this.background = Instantiate(backgroundMaster, GameUtil.V2IOffsetV3(this.levelData.boardSize, new Vector2Int(0, 0)) + backgroundOffset, Quaternion.identity);
+        this.background.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + new Vector3(0, 0, 0.1f);
+    }
     void CreateMarkers() {
-        for (int x = 0; x < this.BOARDHEIGHT; x++) {
-            for (int y = 0; y < this.BOARDWIDTH; y++) {
-                GameObject marker = Instantiate(this.markerMaster, new Vector3(x,y,0f), Quaternion.identity, transform);
+        for (int x = 0; x < this.levelData.boardSize.x; x++) {
+            for (int y = 0; y < this.levelData.boardSize.y; y++) {
+                Vector3 realLocation = GameUtil.V2IToV3(new Vector2Int(x,y));
+                GameObject marker = Instantiate(this.markerMaster, realLocation, Quaternion.identity, transform);
                 marker.name = "(" + marker.transform.position.x + ", " + marker.transform.position.y + ")";
                 Vector2Int pos = new Vector2Int(x,y);
                 this.markerDict[pos] = marker;
@@ -150,6 +175,51 @@ public class BoardManager : MonoBehaviour {
     }
 
     // BLOCK SELECTION FUNCTIONS
+
+    // returns true if block cant be pulled from the direction of isUp
+    public bool IsBlocked(bool isUp, BlockObject block) {
+        bool isBlocked = false;
+        List<BlockObject> ignoreList = new List<BlockObject>();
+        if (isUp) {
+            CheckSelectUpRecursive(block, ignoreList);
+        } else {
+            CheckSelectDownRecursive(block, ignoreList);
+        }
+        return isBlocked;
+
+        void CheckSelectUpRecursive(BlockObject block1, List<BlockObject> ignoreList1) {
+            if (isBlocked == false) {
+                ignoreList1.Add(block1);
+                if (block1.blockData.type == BlockTypeEnum.FIXED) {
+                    print("encountered a fixed blocc");
+                    isBlocked = true;
+                    return;
+                }
+                foreach (BlockObject aboveBlock in GetBlocksAbove(block1)) {
+                    if (!ignoreList1.Contains(aboveBlock)) {
+                        CheckSelectUpRecursive(aboveBlock, ignoreList1);
+                    }
+                }
+            }
+            
+        }
+
+        void CheckSelectDownRecursive(BlockObject block1, List<BlockObject> ignoreList1) {
+            if (isBlocked == false) {
+                ignoreList1.Add(block1);
+                if (block1.blockData.type == BlockTypeEnum.FIXED) {
+                    print("encountered a fixed blocc");
+                    isBlocked = true;
+                    return;
+                }
+                foreach (BlockObject aboveBlock in GetBlocksBelow(block1)) {
+                    if (!ignoreList1.Contains(aboveBlock)) {
+                        CheckSelectDownRecursive(aboveBlock, ignoreList1);
+                    }
+                }
+            }
+        }
+    }
 
     // returns a list of blocks selected when dragging up on a block
     public List<BlockObject> SelectUp(BlockObject rootBlock) {
@@ -253,6 +323,7 @@ public class BoardManager : MonoBehaviour {
     public List<BlockObject> GetBlocksConnected(BlockObject rootBlock, List<BlockObject> ignoreList) {
         List<BlockObject> connectedBlocks = new List<BlockObject>();
         List<BlockObject> ignoreListClone = new List<BlockObject>(ignoreList);
+        // isRoot = true will ignore the root Block in the recursive function
         bool isRoot = true;
         GetBlocksConnectedRecursive(rootBlock, ignoreListClone);
         return connectedBlocks;
@@ -263,7 +334,6 @@ public class BoardManager : MonoBehaviour {
                 connectedBlocks.Add(block);
             }
             isRoot = false;
-            
             foreach (BlockObject aboveBlock in GetBlocksAbove(block)) {
                 if (!ignoreListX.Contains(aboveBlock)) {
                     GetBlocksConnectedRecursive(aboveBlock, ignoreListX);
@@ -306,4 +376,5 @@ public class BoardManager : MonoBehaviour {
         return belowSet.ToList();
     }
 
+    // TODO a function that returns true if block is OK to be selected up/down
 }

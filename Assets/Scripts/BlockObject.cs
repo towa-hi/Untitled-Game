@@ -47,9 +47,12 @@ public class BlockObject : MonoBehaviour
     // void OnMouseExit() {
     //     UnHighlight();
     // }
-
-    public void Move(Vector2Int pos) {
+    public void MoveV3(Vector3 pos) {
         StartCoroutine(MoveCoroutine(pos));
+    }
+
+    public void MoveV2I(Vector2Int pos) {
+        StartCoroutine(MoveCoroutine(GameUtil.V2IOffsetV3(pos, this.blockData.size)));
     }
 
     public void Highlight(Color color) {
@@ -68,10 +71,8 @@ public class BlockObject : MonoBehaviour
         }
     }
 
-    public IEnumerator MoveCoroutine(Vector2Int pos) {
-        Vector3 targetPos = GameUtil.V2IOffsetV3(this.blockData.size, pos);
+    public IEnumerator MoveCoroutine(Vector3 targetPos) {
         Vector3 currentPos = transform.position;
-        this.pos = pos;
         float t = 0f;
         while (t < 1) {
             t += Time.deltaTime / 1f;

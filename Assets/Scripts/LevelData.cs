@@ -6,6 +6,7 @@ public class LevelData : ScriptableObject {
     public int par;
     public string title;
     public string creator;
+    public Vector2Int boardSize;
     public Dictionary<BlockData, BlockState> blockDataDict;
     //Dictionary<EntityData, EntityState> entityDataDict;
 
@@ -15,6 +16,7 @@ public class LevelData : ScriptableObject {
         testLevel.title = "test level";
         testLevel.creator = "test";
         testLevel.blockDataDict = new Dictionary<BlockData, BlockState>();
+        testLevel.boardSize = new Vector2Int(20,20);
         // AddTestBlock(4,1,0,0, BlockTypeEnum.FREE, testLevel);
         // AddTestBlock(2,2,2,1, BlockTypeEnum.FREE, testLevel);
         // AddTestBlock(3,3,4,4, BlockTypeEnum.FREE, testLevel);
@@ -48,7 +50,7 @@ public class LevelData : ScriptableObject {
         AddTestBlock(2,1,13,5, BlockTypeEnum.FREE, testLevel);
         AddTestBlock(3,1,14,6, BlockTypeEnum.FREE, testLevel);
         AddTestBlock(3,1,15,5, BlockTypeEnum.FREE, testLevel);
-        AddTestBlock(3,1,12,4, BlockTypeEnum.FREE, testLevel);
+        AddTestBlock(3,1,11,4, BlockTypeEnum.FREE, testLevel);
         AddTestBlock(5,1,8,12, BlockTypeEnum.FREE, testLevel);
         AddTestBlock(2,1,7,11, BlockTypeEnum.FREE, testLevel);
         AddTestBlock(1,1,7,10, BlockTypeEnum.FREE, testLevel);
