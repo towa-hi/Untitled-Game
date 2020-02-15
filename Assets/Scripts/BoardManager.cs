@@ -13,9 +13,9 @@ public class BoardManager : MonoBehaviour {
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
     public Vector3 mousePos;
+    public Vector2Int mousePosV2I = new Vector2Int(0, 0);
 
     public Vector3 clickedPosition = new Vector3(0, 0, 0);
-
     public Vector2Int clickedPositionV2I = new Vector2Int(0, 0);
     public Vector2Int clickOffsetV2I = new Vector2Int(0, 0);
 
@@ -42,6 +42,8 @@ public class BoardManager : MonoBehaviour {
 
     void Update() {
         this.mousePos = GetMousePos();
+        mousePosV2I = GameUtil.V3ToV2I(this.mousePos);
+
         DrawPathMouseToCenter();
 
         if (Input.GetMouseButtonDown(0)) {
@@ -49,11 +51,13 @@ public class BoardManager : MonoBehaviour {
             if  (this.mouseState == MouseStateEnum.DEFAULT) {
                 this.mouseState = MouseStateEnum.CLICKED;
                 this.clickedPosition = this.mousePos;
+                this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
                 this.selectedBlock = GetBlockOnPosition(GameUtil.V3ToV2I(this.mousePos));
             } 
         } else if (Input.GetMouseButtonUp(0)) {
             //if not clicked
-            clickedPosition = new Vector3(0, 0, 0);
+            this.clickedPosition = new Vector3(0, 0, 0);
+            this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
             this.mouseState = MouseStateEnum.DEFAULT;
         }
         switch (this.mouseState) {
@@ -86,12 +90,7 @@ public class BoardManager : MonoBehaviour {
                 break;
         }
     }
-
-    Vector2Int MouseV2I() {
-
-        Vector2Int mouseV2I = new Vector2Int(0, 0);
-        return mouseV2I;
-    }
+// >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     void DrawPathMouseToCenter() {
         Vector2Int centerGrid = GameUtil.V3ToV2I(mousePos);
@@ -100,8 +99,10 @@ public class BoardManager : MonoBehaviour {
     }
 
     void MoveSelectionToMouse() {
-        clickedPositionV2I = GameUtil.V3ToV2I(clickedPosition);
-        clickOffsetV2I = GameUtil.V3ToV2I(this.mousePos - this.clickedPosition);
+
+        
+        clickOffsetV2I = mousePosV2I -clickedPositionV2I;
+
         if (CheckSelectionOverlap(clickOffsetV2I)) {
             foreach (BlockObject block in selectedList) {
                 block.Highlight(Color.blue);
@@ -116,7 +117,6 @@ public class BoardManager : MonoBehaviour {
             newPosition.z = 0;
             block.transform.position = newPosition;
         }
-        
     }
 
 
@@ -124,7 +124,6 @@ public class BoardManager : MonoBehaviour {
         foreach (BlockObject block in selectedList) {
             for (int x = 0; x < block.blockData.size.x; x++) {
                 for (int y = 0; y < block.blockData.size.y; y++) {
-                    print(block.pos + offset + new Vector2Int(x, y));
                     BlockObject maybeABlock = GetBlockOnPosition(block.pos + offset + new Vector2Int(x, y));
                     if (maybeABlock != null && !selectedList.Contains(maybeABlock)) {
                         return false;
@@ -134,7 +133,6 @@ public class BoardManager : MonoBehaviour {
         }
         return true;
     }
-
 
     void CreateBackground() {
         Vector3 backgroundOffset = new Vector3(0, 0, 0.55f);
