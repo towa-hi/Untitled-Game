@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
 
 public class BoardManager : MonoBehaviour {
@@ -25,13 +26,19 @@ public class BoardManager : MonoBehaviour {
     public BlockObject blockObjectMaster;
     public GameObject backgroundMaster;
     
+    public UnityEngine.UI.Text debugText;
     public GameObject background;
 
+    void DebugTextSet() {
+        this.debugText.text = "mousePos: " + mousePos.ToString() + "\nmousePosV2I: " + mousePosV2I;
+    }
+
     void Awake() {
-        
-        this.levelData = LevelData.GenerateTestLevel();          // make test level
+        this.debugText = GameObject.Find("DebugText").GetComponent<Text>();
+        this.debugText.text = "TEST";
+        this.levelData = LevelData.GenerateTestLevel(); 
         CreateBackground();
-        CreateMarkers();
+        // CreateMarkers();
         LoadLevelData(this.levelData);
         // DestroyMarkers();
     }
@@ -41,6 +48,7 @@ public class BoardManager : MonoBehaviour {
     }
 
     void Update() {
+        
         this.mousePos = GetMousePos();
         mousePosV2I = GameUtil.V3ToV2I(this.mousePos);
 
@@ -89,6 +97,7 @@ public class BoardManager : MonoBehaviour {
                 MoveSelectionToMouse();
                 break;
         }
+    DebugTextSet();
     }
 // >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -99,8 +108,6 @@ public class BoardManager : MonoBehaviour {
     }
 
     void MoveSelectionToMouse() {
-
-        
         clickOffsetV2I = mousePosV2I -clickedPositionV2I;
 
         if (CheckSelectionOverlap(clickOffsetV2I)) {
@@ -118,7 +125,6 @@ public class BoardManager : MonoBehaviour {
             block.transform.position = newPosition;
         }
     }
-
 
     bool CheckSelectionOverlap(Vector2Int offset) {
         foreach (BlockObject block in selectedList) {
