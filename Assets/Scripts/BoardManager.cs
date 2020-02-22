@@ -30,7 +30,7 @@ public class BoardManager : MonoBehaviour {
     public GameObject background;
 
     void DebugTextSet() {
-        this.debugText.text = "mousePos: " + mousePos.ToString() + "\nmousePosV2I: " + mousePosV2I;
+        this.debugText.text = "mousePos: " + mousePos + "\nmousePosV2I: " + mousePosV2I + "\nclickedPosition: " + clickedPositionV2I + "\nclickOffsetV2I: " + clickOffsetV2I;
     }
 
     void Awake() {
@@ -94,12 +94,23 @@ public class BoardManager : MonoBehaviour {
                 }
                 break;
             case MouseStateEnum.HOLDING:
-                MoveSelectionToMouse();
+                clickOffsetV2I = mousePosV2I -clickedPositionV2I;
+                SnapToPosition(clickOffsetV2I);
+                // MoveSelectionToMouse();
                 break;
         }
     DebugTextSet();
     }
 // >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    void SnapToPosition(Vector2Int offset) {
+        foreach (BlockObject block in selectedList) {
+            Vector2Int newPos = block.pos + offset;
+            print("moved to" + newPos);
+            print(GameUtil.V2IOffsetV3(block.blockData.size, newPos));
+            block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, newPos);
+        }
+    }
 
     void DrawPathMouseToCenter() {
         Vector2Int centerGrid = GameUtil.V3ToV2I(mousePos);
@@ -108,8 +119,6 @@ public class BoardManager : MonoBehaviour {
     }
 
     void MoveSelectionToMouse() {
-        clickOffsetV2I = mousePosV2I -clickedPositionV2I;
-
         if (CheckSelectionOverlap(clickOffsetV2I)) {
             foreach (BlockObject block in selectedList) {
                 block.Highlight(Color.blue);
