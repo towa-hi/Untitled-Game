@@ -27,10 +27,47 @@ public class BoardManager : MonoBehaviour {
     public GameObject backgroundMaster;
     
     public UnityEngine.UI.Text debugText;
+    public UnityEngine.UI.Text mapText;
     public GameObject background;
 
     void DebugTextSet() {
-        this.debugText.text = "mousePos: " + mousePos + "\nmousePosV2I: " + mousePosV2I + "\nclickedPosition: " + clickedPositionV2I + "\nclickOffsetV2I: " + clickOffsetV2I;
+        this.debugText.text =   "mousePos: " + mousePos + 
+                                "\nmousePosV2I: " + mousePosV2I + 
+                                "\nclickedPosition: " + clickedPositionV2I + 
+                                "\nclickOffsetV2I: " + clickOffsetV2I;
+        string mapString = "";
+
+        Dictionary<Vector2Int, BlockObject> dataDict = DataToDict();
+        for (int y = levelData.boardSize.y - 1; y >= 0; y--) {
+            for (int x = 0; x < levelData.boardSize.x; x++) {
+                Vector2Int currentPos = new Vector2Int(x, y);
+                if (dataDict.ContainsKey(currentPos)) {
+                    if (dataDict[currentPos].blockData.type == BlockTypeEnum.FIXED) {
+                        mapString += "<color=black>█</color>";
+                    } else {
+                        mapString += "<color=green>█</color>";
+                    }
+                    
+                } else {
+                    mapString += "░";
+                }
+            }
+            mapString += "\n";
+        }
+        this.mapText.text = mapString;
+    }
+
+    Dictionary<Vector2Int, BlockObject> DataToDict() {
+        Dictionary<Vector2Int, BlockObject> dataDict = new Dictionary<Vector2Int, BlockObject>();
+        foreach(BlockObject block in blockList) {
+            for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
+                for (int y = block.pos.y; y < block.pos.y + block.blockData.size.y; y++) {
+                    Vector2Int currentPos = new Vector2Int(x,y);
+                    dataDict[currentPos] = block;
+                }
+            }
+        }
+        return dataDict;
     }
 
     void Awake() {
@@ -52,8 +89,6 @@ public class BoardManager : MonoBehaviour {
         this.mousePos = GetMousePos();
         mousePosV2I = GameUtil.V3ToV2I(this.mousePos);
 
-        DrawPathMouseToCenter();
-
         if (Input.GetMouseButtonDown(0)) {
             //if first time mouse clicked
             if  (this.mouseState == MouseStateEnum.DEFAULT) {
@@ -63,8 +98,7 @@ public class BoardManager : MonoBehaviour {
                 this.selectedBlock = GetBlockOnPosition(GameUtil.V3ToV2I(this.mousePos));
             } 
         } else if (Input.GetMouseButtonUp(0)) {
-            //if not clicked
-            
+            //if let go
             if (this.mouseState == MouseStateEnum.HOLDING) {
                 //place blocks down here
                 print("let go");
@@ -78,7 +112,10 @@ public class BoardManager : MonoBehaviour {
                         block.objectPos = block.pos;
                     }
                 }
-
+                // clear selection stuff
+                this.selectedBlock = null;
+                UnGhostSelected();
+                this.selectedList.Clear();
             }
             this.clickedPosition = new Vector3(0, 0, 0);
             this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
@@ -86,9 +123,6 @@ public class BoardManager : MonoBehaviour {
         }
         switch (this.mouseState) {
             case MouseStateEnum.DEFAULT:
-                this.selectedBlock = null;
-                UnGhostSelected();
-                this.selectedList.Clear();
                 break;
             case MouseStateEnum.CLICKED:
                 if (this.selectedBlock != null) {
@@ -120,10 +154,7 @@ public class BoardManager : MonoBehaviour {
                     foreach (BlockObject block in selectedList) {
                         block.Highlight(Color.red);
                     }
-                    // MoveSelectionToMouse();
                 }
-                
-                // MoveSelectionToMouse();
                 break;
         }
     DebugTextSet();
@@ -145,7 +176,7 @@ public class BoardManager : MonoBehaviour {
                 for (int y = 0; y < block.blockData.size.y; y++) {
                     BlockObject maybeABlock = GetBlockOnPosition(block.pos + offset + new Vector2Int(x,y));
                     if (maybeABlock != null && !selectedList.Contains(maybeABlock)) {
-                        print("IS BLOCKED! INVALID MOVE!!!");
+                        // print("IS BLOCKED! INVALID MOVE!!!");
                         return false;
                     }
                 }
@@ -190,13 +221,13 @@ public class BoardManager : MonoBehaviour {
             }
         }
         if (connectedOnTop == true && connectedOnBot == true) {
-            print("IS SANDWICHED! INVALID MOVE!!!");
+            // print("IS SANDWICHED! INVALID MOVE!!!");
             return false;
         } else if (connectedOnTop == false && connectedOnBot == false) {
-            print("IS FLOATING! INVALID MOVE!!!");
+            // print("IS FLOATING! INVALID MOVE!!!");
             return false;
         } else {
-            print ("VALID MOVE");
+            // print ("VALID MOVE");
             return true;
         }
     }
@@ -322,7 +353,7 @@ public class BoardManager : MonoBehaviour {
     // BLOCK SELECTION FUNCTIONS
 
     // returns true if block cant be pulled from the direction of isUp
-    
+
     public bool IsBlocked(bool isUp, BlockObject block) {
         bool isBlocked = false;
         List<BlockObject> ignoreList = new List<BlockObject>();
