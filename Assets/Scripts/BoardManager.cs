@@ -68,7 +68,17 @@ public class BoardManager : MonoBehaviour {
             if (this.mouseState == MouseStateEnum.HOLDING) {
                 //place blocks down here
                 print("let go");
-                checkValidMove(clickOffsetV2I);
+                if (CheckValidMove(clickOffsetV2I)) {
+                    foreach (BlockObject block in selectedList) {
+                        block.pos = block.objectPos;
+                    }
+                } else {
+                    foreach (BlockObject block in selectedList) {
+                        block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, block.pos);
+                        block.objectPos = block.pos;
+                    }
+                }
+
             }
             this.clickedPosition = new Vector3(0, 0, 0);
             this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
@@ -101,16 +111,16 @@ public class BoardManager : MonoBehaviour {
                 break;
             case MouseStateEnum.HOLDING:
                 clickOffsetV2I = mousePosV2I -clickedPositionV2I;
-                if (CheckSelectionOverlap(clickOffsetV2I)) {
+                SnapToPosition(clickOffsetV2I);
+                if (CheckValidMove(clickOffsetV2I)) {
                     foreach (BlockObject block in selectedList) {
                         block.Highlight(Color.blue);
                     }
-                    SnapToPosition(clickOffsetV2I);
                 } else {
                     foreach (BlockObject block in selectedList) {
                         block.Highlight(Color.red);
                     }
-                    MoveSelectionToMouse();
+                    // MoveSelectionToMouse();
                 }
                 
                 // MoveSelectionToMouse();
@@ -120,15 +130,26 @@ public class BoardManager : MonoBehaviour {
     }
 // >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    void addMarker(Vector2Int pos) {
+    void AddMarker(Vector2Int pos, Color color) {
         Vector3 markerpos = GameUtil.V2IToV3(pos) + new Vector3(0.5f, 0.75f, 0);
-        Instantiate(markerMaster, markerpos, Quaternion.identity);
+        GameObject marker = Instantiate(markerMaster, markerpos, Quaternion.identity);
+        marker.GetComponent<Renderer>().material.color = color;
     }
 
-    void checkValidMove(Vector2Int offset) {
-        // for every block in selected block list
-        HashSet<Vector2Int> checkThesePositions = new HashSet<Vector2Int>();
+    // make this less shitty later
+    bool CheckValidMove(Vector2Int offset) {
+        HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
         foreach (BlockObject block in selectedList) {
+            for (int x = 0; x < block.blockData.size.x; x++) {
+                for (int y = 0; y < block.blockData.size.y; y++) {
+                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + offset + new Vector2Int(x,y));
+                    if (maybeABlock != null && !selectedList.Contains(maybeABlock)) {
+                        print("IS BLOCKED! INVALID MOVE!!!");
+                        return false;
+                    }
+                }
+            }
             for (int x = block.objectPos.x; x < block.objectPos.x + block.blockData.size.x; x++) {
                 int aboveY = block.objectPos.y + block.blockData.size.y;
                 int belowY = block.objectPos.y - 1;
@@ -136,22 +157,47 @@ public class BoardManager : MonoBehaviour {
                 Vector2Int botPos = new Vector2Int(x, belowY);
                 foreach (BlockObject otherBlock in selectedList) {
                     if (GetSelectedBlockOnPosition(topPos) == null) {
-                        // check if theres room for a stud
+                        Vector2Int checkPos = new Vector2Int(x,aboveY);
                         if (GetSelectedBlockOnPosition(topPos + new Vector2Int(0,1)) == null) {
-                            checkThesePositions.Add(new Vector2Int(x,aboveY));
+                            checkTopPositions.Add(checkPos);
                         }
                     }
                     if (GetSelectedBlockOnPosition(botPos) == null) {
-                        // check if theres room for a stud
+                        Vector2Int checkPos = new Vector2Int(x,belowY);
                         if (GetSelectedBlockOnPosition(botPos - new Vector2Int(0,1)) == null) {
-                            checkThesePositions.Add(new Vector2Int(x,belowY));
+                            checkBotPositions.Add(checkPos);
                         }
                     }
                 }
             }
         }
-        foreach (Vector2Int pos in checkThesePositions) {
-            addMarker(pos);
+        // foreach (Vector2Int pos in checkTopPositions.Union(checkBotPositions)) {
+        //     AddMarker(pos, Color.green);
+        // }
+        bool connectedOnTop = false;
+        bool connectedOnBot = false;
+
+        foreach (Vector2Int pos in checkTopPositions) {
+            if (GetBlockOnPosition(pos) != null && !selectedList.Contains(GetBlockOnPosition(pos))) {
+                connectedOnTop = true;
+                // print("connected on top at" + pos);
+            }
+        }
+        foreach (Vector2Int pos in checkBotPositions) {
+            if (GetBlockOnPosition(pos) != null && !selectedList.Contains(GetBlockOnPosition(pos))) {
+                connectedOnBot = true;
+                // print("connected on bot at" + pos);
+            }
+        }
+        if (connectedOnTop == true && connectedOnBot == true) {
+            print("IS SANDWICHED! INVALID MOVE!!!");
+            return false;
+        } else if (connectedOnTop == false && connectedOnBot == false) {
+            print("IS FLOATING! INVALID MOVE!!!");
+            return false;
+        } else {
+            print ("VALID MOVE");
+            return true;
         }
     }
 
@@ -177,19 +223,7 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
-    bool CheckSelectionOverlap(Vector2Int offset) {
-        foreach (BlockObject block in selectedList) {
-            for (int x = 0; x < block.blockData.size.x; x++) {
-                for (int y = 0; y < block.blockData.size.y; y++) {
-                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + offset + new Vector2Int(x, y));
-                    if (maybeABlock != null && !selectedList.Contains(maybeABlock)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
+
 
     void CreateBackground() {
         Vector3 backgroundOffset = new Vector3(0, 0, 1);
@@ -224,8 +258,8 @@ public class BoardManager : MonoBehaviour {
         } else {
             return this.mousePos;
         }
-
     }
+
     void LoadLevelData(LevelData levelData) {
         foreach (KeyValuePair<BlockData, BlockState> pair in levelData.blockDataDict) {
             this.blockList.Add(CreateBlockObject(pair.Key, pair.Value));
@@ -256,6 +290,7 @@ public class BoardManager : MonoBehaviour {
         }
         return null;
     }
+
     public void SetMarkerColor(Vector2Int pos, Color color) {
         this.markerDict[pos].GetComponent<Renderer>().material.color = color;
     }
@@ -287,6 +322,7 @@ public class BoardManager : MonoBehaviour {
     // BLOCK SELECTION FUNCTIONS
 
     // returns true if block cant be pulled from the direction of isUp
+    
     public bool IsBlocked(bool isUp, BlockObject block) {
         bool isBlocked = false;
         List<BlockObject> ignoreList = new List<BlockObject>();
