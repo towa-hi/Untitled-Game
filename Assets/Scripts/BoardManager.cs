@@ -51,8 +51,6 @@ public class BoardManager : MonoBehaviour {
                             mapString += "<color=green>█</color>";
                         }
                     }
-                    
-                    
                 } else {
                     mapString += "░";
                 }
@@ -76,7 +74,6 @@ public class BoardManager : MonoBehaviour {
     }
 
     void Awake() {
-        this.debugText = GameObject.Find("DebugText").GetComponent<Text>();
         this.debugText.text = "TEST";
         this.levelData = LevelData.GenerateTestLevel(); 
         CreateBackground();
@@ -90,9 +87,9 @@ public class BoardManager : MonoBehaviour {
     }
 
     void Update() {
-        
+        // TODO: optimize this to not be dumb
         this.mousePos = GetMousePos();
-        mousePosV2I = GameUtil.V3ToV2I(this.mousePos);
+        this.mousePosV2I = GameUtil.V3ToV2I(this.mousePos);
 
         if (Input.GetMouseButtonDown(0)) {
             //if first time mouse clicked
@@ -123,6 +120,7 @@ public class BoardManager : MonoBehaviour {
                 this.selectedList.Clear();
             }
             this.clickedPosition = new Vector3(0, 0, 0);
+            this.clickedPositionV2I = new Vector2Int(0,0);
             this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
             this.mouseState = MouseStateEnum.DEFAULT;
         }
@@ -149,6 +147,7 @@ public class BoardManager : MonoBehaviour {
                 }
                 break;
             case MouseStateEnum.HOLDING:
+                // TODO: make it so it follows the cursor freely when placement state is floating
                 clickOffsetV2I = mousePosV2I -clickedPositionV2I;
                 SnapToPosition(clickOffsetV2I);
                 if (CheckValidMove(clickOffsetV2I)) {
@@ -164,7 +163,6 @@ public class BoardManager : MonoBehaviour {
         }
     DebugTextSet();
     }
-// >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     void AddMarker(Vector2Int pos, Color color) {
         Vector3 markerpos = GameUtil.V2IToV3(pos) + new Vector3(0.5f, 0.75f, 0);
