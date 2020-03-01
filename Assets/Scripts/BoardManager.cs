@@ -45,8 +45,13 @@ public class BoardManager : MonoBehaviour {
                     if (dataDict[currentPos].blockData.type == BlockTypeEnum.FIXED) {
                         mapString += "<color=black>█</color>";
                     } else {
-                        mapString += "<color=green>█</color>";
+                        if (dataDict[currentPos].stateEnum == BlockStateEnum.GHOST) {
+                            mapString += "<color=blue>▓</color>";
+                        } else {
+                            mapString += "<color=green>█</color>";
+                        }
                     }
+                    
                     
                 } else {
                     mapString += "░";
