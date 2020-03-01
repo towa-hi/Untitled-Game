@@ -6,24 +6,30 @@ public class BlockObject : MonoBehaviour
 {
     public BlockData blockData;
     public Vector2Int pos;
+    public Vector2Int objectPos;
     public BlockStateEnum stateEnum;
     public Color color;
     public bool isChecked;
+    //set in editor
+    public GameObject studMaster;
 
     public void Init(BlockData blockData, BlockState blockState) {
         this.isChecked = false;
         this.blockData = blockData;
         this.pos = new Vector2Int(blockState.pos.x, blockState.pos.y);
+        this.objectPos = pos;
         this.stateEnum = blockState.stateEnum;
-        Vector3 thiccness = new Vector3(0,0,1f);
+        Vector3 thiccness = new Vector3(0,0,2f);
         transform.localScale = GameUtil.V2IToV3(blockData.size) + thiccness;
         if (this.blockData.type == BlockTypeEnum.FIXED) {
-            this.color = Color.black;
+            this.color = Color.gray;
         } else {
             this.color = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
         }
         GetComponent<Renderer>().material.color = color;
         gameObject.name = "Block (" + this.blockData.size.x + "x" + this.blockData.size.y + ") color " + color.ToString();
+
+        CreateStuds();
     }
 
     public void SetState(BlockStateEnum newStateEnum) {
@@ -47,6 +53,26 @@ public class BlockObject : MonoBehaviour
     // void OnMouseExit() {
     //     UnHighlight();
     // }
+
+    // public List<Vector3> GetStudPositions() {
+
+    // }
+
+    public void CreateStuds() {
+        
+        float distanceBetweenStud = 1f / this.blockData.size.x;
+        float y = 0.5f;
+        for (float x = -0.5f; x < 0.5f; x = x + distanceBetweenStud) {
+            for (float z = -0.25f; z <= 0.25f; z += 0.5f) {
+                GameObject childStud = Instantiate(studMaster, new Vector3(0,0,0), Quaternion.identity);
+                childStud.transform.parent = this.transform;
+                float xOffset = x + distanceBetweenStud/2;
+                childStud.transform.localPosition = new Vector3(xOffset ,y, z);
+                childStud.GetComponent<Renderer>().material.color = this.color;
+            }
+        }
+    }
+
     public void MoveV3(Vector3 pos) {
         StartCoroutine(MoveCoroutine(pos));
     }
@@ -71,6 +97,13 @@ public class BlockObject : MonoBehaviour
         }
     }
 
+    public bool CheckSelfObjectPos(Vector2Int pos) {
+        if (pos.x >= this.objectPos.x && pos.x < this.objectPos.x + this.blockData.size.x && pos.y >= this.objectPos.y && pos.y < this.objectPos.y + this.blockData.size.y) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     public IEnumerator MoveCoroutine(Vector3 targetPos) {
         Vector3 currentPos = transform.position;
         float t = 0f;

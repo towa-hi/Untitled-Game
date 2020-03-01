@@ -64,6 +64,12 @@ public class BoardManager : MonoBehaviour {
             } 
         } else if (Input.GetMouseButtonUp(0)) {
             //if not clicked
+            
+            if (this.mouseState == MouseStateEnum.HOLDING) {
+                //place blocks down here
+                print("let go");
+                checkValidMove(clickOffsetV2I);
+            }
             this.clickedPosition = new Vector3(0, 0, 0);
             this.clickedPositionV2I = GameUtil.V3ToV2I(this.clickedPosition);
             this.mouseState = MouseStateEnum.DEFAULT;
@@ -95,7 +101,18 @@ public class BoardManager : MonoBehaviour {
                 break;
             case MouseStateEnum.HOLDING:
                 clickOffsetV2I = mousePosV2I -clickedPositionV2I;
-                SnapToPosition(clickOffsetV2I);
+                if (CheckSelectionOverlap(clickOffsetV2I)) {
+                    foreach (BlockObject block in selectedList) {
+                        block.Highlight(Color.blue);
+                    }
+                    SnapToPosition(clickOffsetV2I);
+                } else {
+                    foreach (BlockObject block in selectedList) {
+                        block.Highlight(Color.red);
+                    }
+                    MoveSelectionToMouse();
+                }
+                
                 // MoveSelectionToMouse();
                 break;
         }
@@ -103,12 +120,46 @@ public class BoardManager : MonoBehaviour {
     }
 // >>>>>>>>>>>>>>>>>>>>>>>>> TODO WRITE A SNAPPING FUNCTION AND ALSO WRITE A  FUNCTION TAHT CHECKS IF THE BLOCK IS IN A PLACE WHERE IT CAN ACTUALY BE PLACED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+    void addMarker(Vector2Int pos) {
+        Vector3 markerpos = GameUtil.V2IToV3(pos) + new Vector3(0.5f, 0.75f, 0);
+        Instantiate(markerMaster, markerpos, Quaternion.identity);
+    }
+
+    void checkValidMove(Vector2Int offset) {
+        // for every block in selected block list
+        HashSet<Vector2Int> checkThesePositions = new HashSet<Vector2Int>();
+        foreach (BlockObject block in selectedList) {
+            for (int x = block.objectPos.x; x < block.objectPos.x + block.blockData.size.x; x++) {
+                int aboveY = block.objectPos.y + block.blockData.size.y;
+                int belowY = block.objectPos.y - 1;
+                Vector2Int topPos = new Vector2Int(x, aboveY);
+                Vector2Int botPos = new Vector2Int(x, belowY);
+                foreach (BlockObject otherBlock in selectedList) {
+                    if (GetSelectedBlockOnPosition(topPos) == null) {
+                        // check if theres room for a stud
+                        if (GetSelectedBlockOnPosition(topPos + new Vector2Int(0,1)) == null) {
+                            checkThesePositions.Add(new Vector2Int(x,aboveY));
+                        }
+                    }
+                    if (GetSelectedBlockOnPosition(botPos) == null) {
+                        // check if theres room for a stud
+                        if (GetSelectedBlockOnPosition(botPos - new Vector2Int(0,1)) == null) {
+                            checkThesePositions.Add(new Vector2Int(x,belowY));
+                        }
+                    }
+                }
+            }
+        }
+        foreach (Vector2Int pos in checkThesePositions) {
+            addMarker(pos);
+        }
+    }
+
     void SnapToPosition(Vector2Int offset) {
         foreach (BlockObject block in selectedList) {
             Vector2Int newPos = block.pos + offset;
-            print("moved to" + newPos);
-            print(GameUtil.V2IOffsetV3(block.blockData.size, newPos));
             block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, newPos);
+            block.objectPos = newPos;
         }
     }
 
@@ -119,15 +170,6 @@ public class BoardManager : MonoBehaviour {
     }
 
     void MoveSelectionToMouse() {
-        if (CheckSelectionOverlap(clickOffsetV2I)) {
-            foreach (BlockObject block in selectedList) {
-                block.Highlight(Color.blue);
-            }
-        } else {
-            foreach (BlockObject block in selectedList) {
-                block.Highlight(Color.red);
-            }
-        }
         foreach (BlockObject block in selectedList) {
             Vector3 newPosition = GameUtil.V2IOffsetV3(block.blockData.size, block.pos) + this.mousePos - this.clickedPosition;
             newPosition.z = 0;
@@ -150,7 +192,7 @@ public class BoardManager : MonoBehaviour {
     }
 
     void CreateBackground() {
-        Vector3 backgroundOffset = new Vector3(0, 0, 0.55f);
+        Vector3 backgroundOffset = new Vector3(0, 0, 1);
         this.background = Instantiate(backgroundMaster, GameUtil.V2IOffsetV3(this.levelData.boardSize, new Vector2Int(0, 0)) + backgroundOffset, Quaternion.identity);
         this.background.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + new Vector3(0, 0, 0.1f);
     }
@@ -206,6 +248,14 @@ public class BoardManager : MonoBehaviour {
         return null;
     }
 
+    public BlockObject GetSelectedBlockOnPosition(Vector2Int objectPos) {
+        foreach (BlockObject block in this.selectedList) {
+            if (block.CheckSelfObjectPos(objectPos)) {
+                return block;
+            }
+        }
+        return null;
+    }
     public void SetMarkerColor(Vector2Int pos, Color color) {
         this.markerDict[pos].GetComponent<Renderer>().material.color = color;
     }
@@ -251,7 +301,6 @@ public class BoardManager : MonoBehaviour {
             if (isBlocked == false) {
                 ignoreList1.Add(block1);
                 if (block1.blockData.type == BlockTypeEnum.FIXED) {
-                    print("encountered a fixed blocc");
                     isBlocked = true;
                     return;
                 }
@@ -268,7 +317,6 @@ public class BoardManager : MonoBehaviour {
             if (isBlocked == false) {
                 ignoreList1.Add(block1);
                 if (block1.blockData.type == BlockTypeEnum.FIXED) {
-                    print("encountered a fixed blocc");
                     isBlocked = true;
                     return;
                 }

@@ -54,8 +54,8 @@ MeshRenderer:
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -106,5 +106,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockData: {fileID: 0}
   pos: {x: 0, y: 0}
+  objectPos: {x: 0, y: 0}
   stateEnum: 0
   color: {r: 0, g: 0, b: 0, a: 0}
+  isChecked: 0
+  studMaster: {fileID: 69063176653000506, guid: 8ffb7876367a79a4cb239d66cf1a4a8d,
+    type: 3}
