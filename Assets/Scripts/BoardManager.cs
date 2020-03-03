@@ -13,6 +13,7 @@ public class BoardManager : MonoBehaviour {
     public List<BlockObject> selectedList;
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
+    public TimeStateEnum timeState = TimeStateEnum.NORMAL;
     public Vector3 mousePos;
     public Vector2Int mousePosV2I = new Vector2Int(0, 0);
 
@@ -31,7 +32,8 @@ public class BoardManager : MonoBehaviour {
     public GameObject background;
 
     void DebugTextSet() {
-        this.debugText.text =   "mousePos: " + mousePos + 
+        this.debugText.text =   "timeState:" + timeState +
+                                "\nmousePos: " + mousePos + 
                                 "\nmousePosV2I: " + mousePosV2I + 
                                 "\nclickedPosition: " + clickedPositionV2I + 
                                 "\nclickOffsetV2I: " + clickOffsetV2I;
@@ -118,6 +120,7 @@ public class BoardManager : MonoBehaviour {
                 this.selectedBlock = null;
                 UnGhostSelected();
                 this.selectedList.Clear();
+                this.timeState = TimeStateEnum.NORMAL;
             }
             this.clickedPosition = new Vector3(0, 0, 0);
             this.clickedPositionV2I = new Vector2Int(0,0);
@@ -132,6 +135,7 @@ public class BoardManager : MonoBehaviour {
                     if (this.mousePos.y > this.clickedPosition.y + 0.5) {
                         //dragging up
                         if (!IsBlocked(true, selectedBlock)) {
+                            this.timeState = TimeStateEnum.PAUSED;
                             this.mouseState = MouseStateEnum.HOLDING;
                             this.selectedList = SelectUp(this.selectedBlock);
                             GhostSelected();
@@ -139,6 +143,7 @@ public class BoardManager : MonoBehaviour {
                     } else if (this.mousePos.y < this.clickedPosition.y - 0.5) {
                         //dragging down
                         if (!IsBlocked(false, selectedBlock)) {
+                            this.timeState = TimeStateEnum.PAUSED;
                             this.mouseState = MouseStateEnum.HOLDING;
                             this.selectedList = SelectDown(this.selectedBlock);
                             GhostSelected();
@@ -236,10 +241,12 @@ public class BoardManager : MonoBehaviour {
     }
 
     void SnapToPosition(Vector2Int offset) {
-        foreach (BlockObject block in selectedList) {
-            Vector2Int newPos = block.pos + offset;
-            block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, newPos);
-            block.objectPos = newPos;
+        if (mousePosV2I.x >= 0 && mousePosV2I.x < levelData.boardSize.x && mousePosV2I.y >= 0 && mousePosV2I.y < levelData.boardSize.y) {
+            foreach (BlockObject block in selectedList) {
+                Vector2Int newPos = block.pos + offset;
+                block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, newPos);
+                block.objectPos = newPos;
+            }
         }
     }
 
