@@ -11,6 +11,8 @@ public class BoardManager : MonoBehaviour {
     public int strokes = 0;
     public List<BlockObject> blockList;
     public List<BlockObject> selectedList;
+    public List<GameObject> entityList;
+
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
     public TimeStateEnum timeState = TimeStateEnum.NORMAL;
@@ -26,6 +28,7 @@ public class BoardManager : MonoBehaviour {
     public GameObject markerMaster;
     public BlockObject blockObjectMaster;
     public GameObject backgroundMaster;
+    public GameObject playerMaster;
     
     public UnityEngine.UI.Text debugText;
     public UnityEngine.UI.Text mapText;
@@ -73,6 +76,11 @@ public class BoardManager : MonoBehaviour {
             }
         }
         return dataDict;
+    }
+
+    void CreatePlayer() {
+        GameObject player = Instantiate(playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity);
+        entityList.Add(player);
     }
 
     void Awake() {

@@ -6,8 +6,8 @@ public class EntityData : ScriptableObject {
     public Vector2Int size;
     public EntityTypeEnum type;
     
-    public void Init(int width, int height, EntityTypeEnum type) {
-        this.size = new Vector2Int(width, height);
+    public void Init(Vector2Int size, EntityTypeEnum type) {
+        this.size = size;
         this.type = type;
     }
 }
