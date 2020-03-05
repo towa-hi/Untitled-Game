@@ -111,12 +111,22 @@ public class EntityObject : MonoBehaviour {
     public IEnumerator TurnCoroutine() {
         print("turning around");
         float t = 0f;
-        while (t < 1) {
-            t += Time.deltaTime / turnSpeed;
-            float rotation = Mathf.Lerp(transform.eulerAngles.y, 180f, t);
-            transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
-            yield return null;
+        if (this.facing == FacingEnum.RIGHT) {
+            while (t < 1) {
+                t += Time.deltaTime / turnSpeed;
+                float rotation = Mathf.Lerp(transform.eulerAngles.y, 180f, t);
+                transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
+                yield return null;
+            }
+        } else {
+            while (t < 1) {
+                t += Time.deltaTime / turnSpeed;
+                float rotation = Mathf.Lerp(transform.eulerAngles.y, 0f, t);
+                transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
+                yield return null;
+            }
         }
+        
     }
 
     // TODO: figure out why this is slow and what moveSpeed actually does
