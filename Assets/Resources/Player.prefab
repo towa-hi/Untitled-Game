@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8301137179449930924}
   - component: {fileID: 8301137179449930925}
   - component: {fileID: 8301137179449930926}
-  - component: {fileID: 8301137179449930927}
+  - component: {fileID: 114015245086211318}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 8301137179449930920}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 9.190397, y: 2.6848288, z: 17.69891}
-  m_LocalScale: {x: 2, y: 3.5, z: 2}
+  m_LocalScale: {x: 2, y: 4.5, z: 2}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -92,7 +92,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8301137179449930927
+--- !u!114 &114015245086211318
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,9 +101,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8301137179449930920}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 086b4b09c31b03742ac076bd00b5f0b1, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c8899e32d73dc44c86dc011078cbf99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   entityData: {fileID: 0}
-  entityType: 0
   pos: {x: 0, y: 0}
+  destination: {x: 0, y: 0}
+  state: 0
+  boardManager: {fileID: 0}

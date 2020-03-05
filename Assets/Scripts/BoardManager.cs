@@ -5,13 +5,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 
-public class BoardManager : MonoBehaviour {
+public class BoardManager : Singleton<BoardManager> {
     // don't edit these in editor
+    public string test = "wew lad";
+
     public LevelData levelData;
     public int strokes = 0;
     public List<BlockObject> blockList;
     public List<BlockObject> selectedList;
-    public List<GameObject> entityList;
+    public List<EntityObject> entityList;
 
     public BlockObject selectedBlock;
     public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
@@ -29,6 +31,7 @@ public class BoardManager : MonoBehaviour {
     public BlockObject blockObjectMaster;
     public GameObject backgroundMaster;
     public GameObject playerMaster;
+    public EntityObject player;
     
     public UnityEngine.UI.Text debugText;
     public UnityEngine.UI.Text mapText;
@@ -79,11 +82,14 @@ public class BoardManager : MonoBehaviour {
     }
 
     void CreatePlayer() {
-        GameObject player = Instantiate(playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity);
+        //TODO figure out why this doesnt work
+        player = Instantiate(playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<EntityObject>();
+        player.Init(new Vector2Int(7,1));
         entityList.Add(player);
     }
 
     void Awake() {
+
         this.debugText.text = "TEST";
         this.levelData = LevelData.GenerateTestLevel(); 
         CreateBackground();
@@ -94,6 +100,7 @@ public class BoardManager : MonoBehaviour {
 
     void Start() {
         print("started");
+        CreatePlayer();
     }
 
     void Update() {
@@ -113,7 +120,6 @@ public class BoardManager : MonoBehaviour {
             //if let go
             if (this.mouseState == MouseStateEnum.HOLDING) {
                 //place blocks down here
-                print("let go");
                 if (CheckValidMove(clickOffsetV2I)) {
                     foreach (BlockObject block in selectedList) {
                         block.pos = block.objectPos;
@@ -177,7 +183,7 @@ public class BoardManager : MonoBehaviour {
     DebugTextSet();
     }
 
-    void AddMarker(Vector2Int pos, Color color) {
+    public void AddMarker(Vector2Int pos, Color color) {
         Vector3 markerpos = GameUtil.V2IToV3(pos) + new Vector3(0.5f, 0.75f, 0);
         GameObject marker = Instantiate(markerMaster, markerpos, Quaternion.identity);
         marker.GetComponent<Renderer>().material.color = color;
@@ -292,7 +298,7 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
-    void DestroyMarkers() {
+    public void DestroyMarkers() {
         GameObject[] destroyList = GameObject.FindGameObjectsWithTag("Marker");
         foreach (GameObject marker in destroyList) {
             GameObject.Destroy(marker);

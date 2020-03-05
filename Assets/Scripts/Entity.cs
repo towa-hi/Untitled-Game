@@ -8,7 +8,8 @@ public class Entity : MonoBehaviour
     public EntityTypeEnum entityType;
     public Vector2Int pos;
     public Color color;
-
+    public BoardManager boardManager;
+    
     void Move(Vector2Int newPos) {
         Vector3 newV3Pos = GameUtil.V2IOffsetV3(this.entityData.size, newPos);
         print("moving from " + transform.position + " to " + newV3Pos);
@@ -17,7 +18,24 @@ public class Entity : MonoBehaviour
         this.pos = newPos;
     }
 
+    void Jump(Vector2Int newPos) {
+        Vector3 newV3Pos = GameUtil.V2IOffsetV3(this.entityData.size, newPos);
+        print("jumping from " + transform.position + " to " + newV3Pos);
+        Debug.DrawLine(transform.position, newV3Pos, Color.red, 1f);
+        StartCoroutine(JumpCoroutine(newV3Pos));
+    }
+
     public IEnumerator MoveCoroutine(Vector3 targetPos) {
+        Vector3 currentPos = transform.position;
+        float t = 0f;
+        while (t < 1) {
+            t += Time.deltaTime / 1f;
+            transform.position = Vector3.Lerp(currentPos, targetPos, t);
+            yield return null;
+        }
+    }
+
+    public IEnumerator JumpCoroutine(Vector3 targetPos) {
         Vector3 currentPos = transform.position;
         float t = 0f;
         while (t < 1) {
