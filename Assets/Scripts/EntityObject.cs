@@ -170,11 +170,11 @@ public class EntityObject : MonoBehaviour {
         return hasFloor;
     }
 
-    public bool CheckSelfObjectPos(Vector2Int pos) {
-        if (pos.x >= this.objectPos.x && pos.x < this.objectPos.x + this.entityData.size.x && pos.y >= this.objectPos.y && pos.y < this.objectPos.y + this.entityData.size.y) {
-            return true;
-        } else {
-            return false;
-        }
+    public bool CheckSelfObjectPos(Vector2Int aPos) {
+        return GameUtil.IsInside(aPos, this.objectPos, this.entityData.size);
+    }
+
+    public bool CheckSelfPos(Vector2Int aPos) {
+        return GameUtil.IsInside(aPos, this.pos, this.entityData.size);
     }
 }

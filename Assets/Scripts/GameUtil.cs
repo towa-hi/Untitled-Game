@@ -21,8 +21,8 @@ public class GameUtil {
         return new Vector2Int((int)aPos.x, (int)(aPos.y * 1.0/GameUtil.BLOCKHEIGHT));
     }
     //check if a vector2int is within the bounds of two other vector2ints
-    public static bool IsInside(Vector2Int aPos, Vector2Int aBotBound, Vector2Int aTopBound) {
-        Rect boundingBox = new Rect(aBotBound, aTopBound);
+    public static bool IsInside(Vector2Int aPos, Vector2Int aOrigin, Vector2Int aSize) {
+        Rect boundingBox = new Rect(aOrigin, aSize);
         return boundingBox.Contains(aPos);
     }
 }

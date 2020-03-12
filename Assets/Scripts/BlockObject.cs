@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockObject : MonoBehaviour
-{
+public class BlockObject : MonoBehaviour, EntityInterface {
     public BlockData blockData;
     public Vector2Int pos;
-    public Vector2Int objectPos;
+    public Vector2Int ghostPos;
     public BlockStateEnum stateEnum;
     public Color color;
     public bool isChecked;
@@ -17,7 +16,7 @@ public class BlockObject : MonoBehaviour
         this.isChecked = false;
         this.blockData = blockData;
         this.pos = new Vector2Int(blockState.pos.x, blockState.pos.y);
-        this.objectPos = pos;
+        this.ghostPos = pos;
         this.stateEnum = blockState.stateEnum;
         Vector3 thiccness = new Vector3(0,0,2f);
         transform.localScale = GameUtil.V2IToV3(blockData.size) + thiccness;
@@ -45,21 +44,20 @@ public class BlockObject : MonoBehaviour
                 break;
         }
     }
-    //debug
-    // void OnMouseEnter() {
-    //     Highlight();
-    // }
 
-    // void OnMouseExit() {
-    //     UnHighlight();
-    // }
+    public Vector2Int GetSize() {
+        return this.blockData.size;
+    }
 
-    // public List<Vector3> GetStudPositions() {
+    public Vector2Int GetPos() {
+        return this.pos;
+    }
 
-    // }
+    public bool IsInsideSelf(Vector2Int aPos) {
+        return GameUtil.IsInside(aPos, this.pos, this.blockData.size); 
+    }
 
     public void CreateStuds() {
-        
         float distanceBetweenStud = 1f / this.blockData.size.x;
         float y = 0.5f;
         for (float x = -0.5f; x < 0.5f; x = x + distanceBetweenStud) {
@@ -90,20 +88,13 @@ public class BlockObject : MonoBehaviour
     }
 
     public bool CheckSelfPos(Vector2Int pos) {
-        if (pos.x >= this.pos.x && pos.x < this.pos.x + this.blockData.size.x && pos.y >= this.pos.y && pos.y < this.pos.y + this.blockData.size.y) {
-            return true;
-        } else {
-            return false;
-        }
+        return GameUtil.IsInside(pos, this.pos, this.blockData.size);
     }
 
-    public bool CheckSelfObjectPos(Vector2Int pos) {
-        if (pos.x >= this.objectPos.x && pos.x < this.objectPos.x + this.blockData.size.x && pos.y >= this.objectPos.y && pos.y < this.objectPos.y + this.blockData.size.y) {
-            return true;
-        } else {
-            return false;
-        }
+    public bool CheckGhostPos(Vector2Int pos) {
+        return GameUtil.IsInside(pos, this.ghostPos, this.blockData.size);
     }
+
     public IEnumerator MoveCoroutine(Vector3 targetPos) {
         Vector3 currentPos = transform.position;
         float t = 0f;

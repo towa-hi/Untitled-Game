@@ -15,7 +15,6 @@ public class MobObject : MonoBehaviour, EntityInterface {
     }
 
     public bool IsInsideSelf(Vector2Int aPos) {
-        
-        return GameUtil.IsInside(aPos, this.pos, this.pos + this.mobData.size);
+        return GameUtil.IsInside(aPos, this.pos, this.mobData.size);
     }
 }

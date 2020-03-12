@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1545349000780153983}
   m_Layer: 0
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -106,7 +106,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockData: {fileID: 0}
   pos: {x: 0, y: 0}
-  objectPos: {x: 0, y: 0}
+  ghostPos: {x: 0, y: 0}
   stateEnum: 0
   color: {r: 0, g: 0, b: 0, a: 0}
   isChecked: 0
