@@ -142,7 +142,7 @@ public class EntityObject : MonoBehaviour {
         List<Vector2Int> checkPosList = GetOccupiedPos();
         foreach(Vector2Int currentPos in checkPosList) {
             Vector2Int checkPos = currentPos + offset;
-            BlockObject maybeABlock = BoardManager.Instance.GetBlockOnPosition(checkPos);
+            BlockObject maybeABlock = BoardManager.GetBlockOnPosition(checkPos);
             
             if (maybeABlock != null) {
                 BoardManager.Instance.AddMarker(checkPos, Color.red);
@@ -159,7 +159,7 @@ public class EntityObject : MonoBehaviour {
         bool hasFloor = false;
         for (int x = pos.x + offset.x; x < pos.x + offset.x + entityData.size.x; x++) {
             Vector2Int checkPos = new Vector2Int(x, pos.y - 1);
-            BlockObject maybeABlock = BoardManager.Instance.GetBlockOnPosition(checkPos);
+            BlockObject maybeABlock = BoardManager.GetBlockOnPosition(checkPos);
             if (maybeABlock != null) {
                 hasFloor = true;
                 BoardManager.Instance.AddMarker(checkPos, Color.red);

@@ -88,7 +88,7 @@ public class BoardManager : Singleton<BoardManager> {
 
     void Awake() {
         this.levelData = LevelData.GenerateTestLevel(); 
-        LoadLevelData(this.levelData);
+        this.blockList = LevelDataToBlockList(this.levelData);
         CreateBackground();
     }
 
@@ -180,14 +180,14 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // make this less shitty later
-    bool CheckValidMove(Vector2Int aOffset) {
+    static bool CheckValidMove(Vector2Int aOffset) {
         HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
         HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
-        foreach (BlockObject block in this.selectedList) {
+        foreach (BlockObject block in BoardManager.Instance.selectedList) {
             for (int x = 0; x < block.blockData.size.x; x++) {
                 for (int y = 0; y < block.blockData.size.y; y++) {
                     BlockObject maybeABlock = GetBlockOnPosition(block.pos + aOffset + new Vector2Int(x,y));
-                    if (maybeABlock != null && !this.selectedList.Contains(maybeABlock)) {
+                    if (maybeABlock != null && !BoardManager.Instance.selectedList.Contains(maybeABlock)) {
                         // print("IS BLOCKED! INVALID MOVE!!!");
                         return false;
                     }
@@ -198,7 +198,7 @@ public class BoardManager : Singleton<BoardManager> {
                 int belowY = block.ghostPos.y - 1;
                 Vector2Int topPos = new Vector2Int(x, aboveY);
                 Vector2Int botPos = new Vector2Int(x, belowY);
-                foreach (BlockObject otherBlock in this.selectedList) {
+                foreach (BlockObject otherBlock in BoardManager.Instance.selectedList) {
                     if (GetSelectedBlockOnPosition(topPos) == null) {
                         Vector2Int checkPos = new Vector2Int(x,aboveY);
                         if (GetSelectedBlockOnPosition(topPos + Vector2Int.up) == null) {
@@ -218,13 +218,13 @@ public class BoardManager : Singleton<BoardManager> {
         bool connectedOnBot = false;
 
         foreach (Vector2Int pos in checkTopPositions) {
-            if (GetBlockOnPosition(pos) != null && !this.selectedList.Contains(GetBlockOnPosition(pos))) {
+            if (GetBlockOnPosition(pos) != null && !BoardManager.Instance.selectedList.Contains(GetBlockOnPosition(pos))) {
                 connectedOnTop = true;
                 // print("connected on top at" + pos);
             }
         }
         foreach (Vector2Int pos in checkBotPositions) {
-            if (GetBlockOnPosition(pos) != null && !this.selectedList.Contains(GetBlockOnPosition(pos))) {
+            if (GetBlockOnPosition(pos) != null && !BoardManager.Instance.selectedList.Contains(GetBlockOnPosition(pos))) {
                 connectedOnBot = true;
                 // print("connected on bot at" + pos);
             }
@@ -275,21 +275,23 @@ public class BoardManager : Singleton<BoardManager> {
         }
     }
 
-    void LoadLevelData(LevelData aLevelData) {
+    static List<BlockObject> LevelDataToBlockList(LevelData aLevelData) {
+        List<BlockObject> newBlockList = new List<BlockObject>();
         foreach (KeyValuePair<BlockData, BlockState> pair in aLevelData.blockDataDict) {
-            this.blockList.Add(CreateBlockObject(pair.Key, pair.Value));
+            newBlockList.Add(CreateBlockObject(pair.Key, pair.Value));
         }
+        return newBlockList;
     }
 
-    BlockObject CreateBlockObject(BlockData aBlockData, BlockState aBlockState) {
-        BlockObject newBlockObject = Instantiate(this.blockObjectMaster, GameUtil.V2IOffsetV3(aBlockData.size, aBlockState.pos), Quaternion.identity);
+    static BlockObject CreateBlockObject(BlockData aBlockData, BlockState aBlockState) {
+        BlockObject newBlockObject = Instantiate(BoardManager.Instance.blockObjectMaster, GameUtil.V2IOffsetV3(aBlockData.size, aBlockState.pos), Quaternion.identity);
         newBlockObject.Init(aBlockData, aBlockState);
         return newBlockObject;
     }
 
     // returns block occupying a grid position
-    public BlockObject GetBlockOnPosition(Vector2Int aPos) {
-        foreach (BlockObject block in this.blockList) {
+    public static BlockObject GetBlockOnPosition(Vector2Int aPos) {
+        foreach (BlockObject block in BoardManager.Instance.blockList) {
             if (block.CheckSelfPos(aPos)) {
                 return block;
             }
@@ -297,8 +299,8 @@ public class BoardManager : Singleton<BoardManager> {
         return null;
     }
 
-    public EntityObject GetEntityOnPosition(Vector2Int aPos) {
-        foreach (EntityObject entity in this.entityList) {
+    public static EntityObject GetEntityOnPosition(Vector2Int aPos) {
+        foreach (EntityObject entity in BoardManager.Instance.entityList) {
             if (entity.CheckSelfPos(aPos)) {
                 return entity;
             }
@@ -306,17 +308,13 @@ public class BoardManager : Singleton<BoardManager> {
         return null;
     }
 
-    public BlockObject GetSelectedBlockOnPosition(Vector2Int aPos) {
-        foreach (BlockObject block in this.selectedList) {
+    public static BlockObject GetSelectedBlockOnPosition(Vector2Int aPos) {
+        foreach (BlockObject block in BoardManager.Instance.selectedList) {
             if (block.CheckGhostPos(aPos)) {
                 return block;
             }
         }
         return null;
-    }
-
-    public void SetMarkerColor(Vector2Int pos, Color color) {
-        this.markerDict[pos].GetComponent<Renderer>().material.color = color;
     }
 
     void GhostSelected() {
@@ -334,7 +332,7 @@ public class BoardManager : Singleton<BoardManager> {
     // BLOCK SELECTION FUNCTIONS
     // returns true if block cant be pulled from the direction of isUp
 
-    public bool IsBlocked(bool aIsUp, BlockObject aBlock) {
+    static bool IsBlocked(bool aIsUp, BlockObject aBlock) {
         bool isBlocked = false;
         List<BlockObject> ignoreList = new List<BlockObject>();
         if (aIsUp) {
@@ -377,7 +375,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns a list of blocks selected when dragging up on a block
-    public List<BlockObject> SelectUp(BlockObject aRootBlock) {
+    static List<BlockObject> SelectUp(BlockObject aRootBlock) {
         List<BlockObject> treeUpList = TreeUp(aRootBlock);
         List<BlockObject> selectUpList = new List<BlockObject>(treeUpList);
         foreach (BlockObject currentBlock in treeUpList) {
@@ -397,7 +395,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns a list of blocks selected when dragging down on a block
-    public List<BlockObject> SelectDown(BlockObject aRootBlock) {
+    static List<BlockObject> SelectDown(BlockObject aRootBlock) {
         List<BlockObject> treeDownList = TreeDown(aRootBlock);
         List<BlockObject> selectDownList = new List<BlockObject>(treeDownList);
         foreach (BlockObject currentBlock in treeDownList) {
@@ -417,7 +415,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns a list of rootBlock + blocks that are above rootBlock or connected to a block above rootBlock
-    public List<BlockObject> TreeUp(BlockObject aRootBlock) {
+    static List<BlockObject> TreeUp(BlockObject aRootBlock) {
         List<BlockObject> treeUpList = new List<BlockObject>();
         treeUpRecursive(aRootBlock, treeUpList);
         return treeUpList;
@@ -433,7 +431,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns a list of rootBlock + blocks that are below rootBlock or connected to a block below rootBlock
-    public List<BlockObject> TreeDown(BlockObject aRootBlock) {
+    static List<BlockObject> TreeDown(BlockObject aRootBlock) {
         List<BlockObject> treeDownList = new List<BlockObject>();
         treeDownRecursive(aRootBlock, treeDownList);
         return treeDownList;
@@ -449,7 +447,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns whether or not rootBlock has a connection to a fixed block
-    public bool IsConnectedToFixed(BlockObject aRootBlock, List<BlockObject> aIgnoreList) {
+    static bool IsConnectedToFixed(BlockObject aRootBlock, List<BlockObject> aIgnoreList) {
         bool isConnectedToFixed = false;
         List<BlockObject> ignoreListClone = new List<BlockObject>(aIgnoreList);
         IsConnectedToFixedRecursive(aRootBlock, ignoreListClone);
@@ -475,7 +473,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns all blocks connected to this rootBlock while ignoring blocks inside ignoreList
-    public List<BlockObject> GetBlocksConnected(BlockObject aRootBlock, List<BlockObject> aIgnoreList) {
+    static List<BlockObject> GetBlocksConnected(BlockObject aRootBlock, List<BlockObject> aIgnoreList) {
         List<BlockObject> connectedBlocks = new List<BlockObject>();
         List<BlockObject> ignoreListClone = new List<BlockObject>(aIgnoreList);
         // isRoot = true will ignore the root Block in the recursive function
@@ -483,18 +481,18 @@ public class BoardManager : Singleton<BoardManager> {
         GetBlocksConnectedRecursive(aRootBlock, ignoreListClone);
         return connectedBlocks;
 
-        void GetBlocksConnectedRecursive(BlockObject block, List<BlockObject> ignoreListX) {
+        void GetBlocksConnectedRecursive(BlockObject rBlock, List<BlockObject> ignoreListX) {
             if (isRoot == false) {
-                ignoreListX.Add(block);
-                connectedBlocks.Add(block);
+                ignoreListX.Add(rBlock);
+                connectedBlocks.Add(rBlock);
             }
             isRoot = false;
-            foreach (BlockObject aboveBlock in GetBlocksAbove(block)) {
+            foreach (BlockObject aboveBlock in GetBlocksAbove(rBlock)) {
                 if (!ignoreListX.Contains(aboveBlock)) {
                     GetBlocksConnectedRecursive(aboveBlock, ignoreListX);
                 }
             }
-            foreach (BlockObject belowBlock in GetBlocksBelow(block)) {
+            foreach (BlockObject belowBlock in GetBlocksBelow(rBlock)) {
                 if (!ignoreListX.Contains(belowBlock)) {
                     GetBlocksConnectedRecursive(belowBlock, ignoreListX);
                 }
@@ -504,7 +502,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // returns a list of blocks directly above block
-    public List<BlockObject> GetBlocksAbove(BlockObject aBlock) {
+    static List<BlockObject> GetBlocksAbove(BlockObject aBlock) {
         HashSet<BlockObject> aboveSet = new HashSet<BlockObject>();
         for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.blockData.size.x; x++) {
             int y = aBlock.pos.y + aBlock.blockData.size.y;
@@ -518,7 +516,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
     
     // returns a list of blocks directly below block
-    public List<BlockObject> GetBlocksBelow(BlockObject aBlock) {
+    static List<BlockObject> GetBlocksBelow(BlockObject aBlock) {
         HashSet<BlockObject> belowSet = new HashSet<BlockObject>();
         for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.blockData.size.x; x++) {
             int y = aBlock.pos.y - 1;
