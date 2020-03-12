@@ -6,6 +6,7 @@ public class EntityObject : MonoBehaviour {
 
     public EntityData entityData;
     public Vector2Int pos;
+    public Vector2Int objectPos;
     public Vector2Int destination;
     public EntityStateEnum state;
     public FacingEnum facing;
@@ -16,7 +17,7 @@ public class EntityObject : MonoBehaviour {
         // setting speed for now
         this.moveSpeed = 1f;
         this.turnSpeed = 1f;
-
+    
         this.facing = FacingEnum.RIGHT;
         this.entityData = ScriptableObject.CreateInstance("EntityData") as EntityData;
         this.entityData.Init(new Vector2Int(2,3), EntityTypeEnum.PLAYER);
@@ -27,6 +28,7 @@ public class EntityObject : MonoBehaviour {
 
     public void Init(Vector2Int startingPos) {
         this.pos = startingPos;
+        this.objectPos = startingPos;
         this.transform.position = GameUtil.V2IOffsetV3(this.entityData.size, this.pos);
     }
     // Start is called before the first frame update
@@ -64,45 +66,32 @@ public class EntityObject : MonoBehaviour {
             case FacingEnum.RIGHT:
                 offset = new Vector2Int(1,0);
                 destination = this.pos + offset;
-                if (CheckAdjacentDirection(offset)) {
-                    print("right path clear");
-                    yield return StartCoroutine(MoveCoroutine(GameUtil.V2IOffsetV3(this.entityData.size, destination)));
-                    this.pos = destination;
-                    BoardManager.Instance.DestroyMarkers();
-                    print(" move coroutine done");
-
-                    yield return StartCoroutine(DoNext());
-                } else {
-                    print("path blocked, rotating");
-                    yield return StartCoroutine(TurnCoroutine());
-                    this.facing = FacingEnum.LEFT;
-                     yield return StartCoroutine(DoNext());
-                    // if 1 up is free, jump there
-                    // if 1 down is free jump there
-                    // if neither are free turn around
-                }
                 break;
             case FacingEnum.LEFT:
                 offset = new Vector2Int(-1, 0);
                 destination = this.pos + offset;
-                if (CheckAdjacentDirection(offset)) {
-                    print("left path clear");
-                    yield return StartCoroutine(MoveCoroutine(GameUtil.V2IOffsetV3(this.entityData.size, destination)));
-                    this.pos = destination;
-                    BoardManager.Instance.DestroyMarkers();
-                    print("move coroutine done");
-                    yield return StartCoroutine(DoNext());
-                } else {
-                    print("path blocked, rotating");
-                    yield return StartCoroutine(TurnCoroutine());
-                    this.facing = FacingEnum.RIGHT;
-                    yield return StartCoroutine(DoNext());
-                    // if 1 up is free, jump there
-                    // if 1 down is free jump there
-                    // if neither are free turn around
-                }
-
                 break;
+        }
+        if (CheckAdjacentDirection(offset) && CheckFloor(offset)) {
+            print("right path clear");
+            yield return StartCoroutine(MoveCoroutine(GameUtil.V2IOffsetV3(this.entityData.size, destination)));
+            this.pos = destination;
+            BoardManager.Instance.DestroyMarkers();
+            print(" move coroutine done");
+
+            yield return StartCoroutine(DoNext());
+        } else {
+            print("path blocked, rotating");
+            yield return StartCoroutine(TurnCoroutine());
+            if (this.facing == FacingEnum.RIGHT) {
+                this.facing = FacingEnum.LEFT;
+            } else if (this.facing == FacingEnum.LEFT) {
+                this.facing = FacingEnum.RIGHT;
+            }
+            yield return StartCoroutine(DoNext());
+            // if 1 up is free, jump there
+            // if 1 down is free jump there
+            // if neither are free turn around
         }
     }
 
@@ -111,21 +100,17 @@ public class EntityObject : MonoBehaviour {
     public IEnumerator TurnCoroutine() {
         print("turning around");
         float t = 0f;
-        if (this.facing == FacingEnum.RIGHT) {
-            while (t < 1) {
-                t += Time.deltaTime / turnSpeed;
-                float rotation = Mathf.Lerp(transform.eulerAngles.y, 180f, t);
-                transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
-                yield return null;
-            }
-        } else {
-            while (t < 1) {
-                t += Time.deltaTime / turnSpeed;
-                float rotation = Mathf.Lerp(transform.eulerAngles.y, 0f, t);
-                transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
-                yield return null;
-            }
+        Quaternion currentRotation = this.transform.rotation;
+        Quaternion newRotation = Quaternion.AngleAxis(180, Vector3.up) * currentRotation;
+        while (t < 1) {
+            t += Time.deltaTime / turnSpeed;
+            float rotation = Mathf.Lerp(transform.eulerAngles.y, 180f, t);
+            this.transform.rotation = Quaternion.Lerp(currentRotation, newRotation, t);
+            // transform.eulerAngles = new Vector3(transform.eulerAngles.x, rotation, transform.eulerAngles.z);
+            yield return null;
         }
+        this.transform.rotation = newRotation;
+
         
     }
 
@@ -158,6 +143,7 @@ public class EntityObject : MonoBehaviour {
         foreach(Vector2Int currentPos in checkPosList) {
             Vector2Int checkPos = currentPos + offset;
             BlockObject maybeABlock = BoardManager.Instance.GetBlockOnPosition(checkPos);
+            
             if (maybeABlock != null) {
                 BoardManager.Instance.AddMarker(checkPos, Color.red);
                 isFree = false;
@@ -166,5 +152,29 @@ public class EntityObject : MonoBehaviour {
             }
         }
         return isFree;
+    }
+
+    // check if floor exists under this position
+    public bool CheckFloor(Vector2Int offset) {
+        bool hasFloor = false;
+        for (int x = pos.x + offset.x; x < pos.x + offset.x + entityData.size.x; x++) {
+            Vector2Int checkPos = new Vector2Int(x, pos.y - 1);
+            BlockObject maybeABlock = BoardManager.Instance.GetBlockOnPosition(checkPos);
+            if (maybeABlock != null) {
+                hasFloor = true;
+                BoardManager.Instance.AddMarker(checkPos, Color.red);
+            } else {
+                BoardManager.Instance.AddMarker(checkPos, Color.green);
+            }
+        }
+        return hasFloor;
+    }
+
+    public bool CheckSelfObjectPos(Vector2Int pos) {
+        if (pos.x >= this.objectPos.x && pos.x < this.objectPos.x + this.entityData.size.x && pos.y >= this.objectPos.y && pos.y < this.objectPos.y + this.entityData.size.y) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

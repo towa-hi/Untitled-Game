@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 interface EntityInterface {
-    void Kill();
-
-    void Move(Vector2Int newPos);
-
-
+    Vector2Int GetSize();
+    Vector2Int GetPos();
+    bool IsInsideSelf(Vector2Int aPos);
 }

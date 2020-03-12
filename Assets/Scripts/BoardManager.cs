@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -37,6 +36,7 @@ public class BoardManager : Singleton<BoardManager> {
     public UnityEngine.UI.Text mapText;
     public GameObject background;
 
+    
     void DebugTextSet() {
         this.debugText.text =   "timeState:" + timeState +
                                 "\nmousePos: " + mousePos + 
@@ -59,6 +59,8 @@ public class BoardManager : Singleton<BoardManager> {
                             mapString += "<color=green>█</color>";
                         }
                     }
+                } else if (GetEntityOnPosition(currentPos) != null) {
+                    mapString += "<color=red>█</color>";
                 } else {
                     mapString += "░";
                 }
@@ -84,7 +86,7 @@ public class BoardManager : Singleton<BoardManager> {
     void CreatePlayer() {
         //TODO figure out why this doesnt work
         player = Instantiate(playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<EntityObject>();
-        player.Init(new Vector2Int(7,1));
+        player.Init(new Vector2Int(5,16));
         entityList.Add(player);
     }
 
@@ -334,6 +336,15 @@ public class BoardManager : Singleton<BoardManager> {
                 return block;
             }
         }
+        return null;
+    }
+
+    public EntityObject GetEntityOnPosition(Vector2Int pos) {
+        foreach (EntityObject entity in this.entityList) {
+            if (entity.CheckSelfObjectPos(pos)) {
+                return entity;
+            }
+        }    
         return null;
     }
 
