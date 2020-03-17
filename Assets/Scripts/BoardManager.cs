@@ -174,7 +174,7 @@ public class BoardManager : Singleton<BoardManager> {
 
     void FixedUpdate() {
         foreach (MobObject mob in this.mobList) {
-            
+            mob.DoNext();
         }
     }
     void SetSelectedListState(BlockStateEnum aState) {
@@ -287,7 +287,7 @@ public class BoardManager : Singleton<BoardManager> {
         return null;
     }
 
-    public static EntityObject GetMobOnPosition(Vector2Int aPos) {
+    public static MobObject GetMobOnPosition(Vector2Int aPos) {
         foreach (MobObject mob in BoardManager.Instance.mobList) {
             if (mob.IsInsideSelf(aPos)) {
                 return mob;
@@ -326,6 +326,11 @@ public class BoardManager : Singleton<BoardManager> {
                     // check if this position is occupied by something not itself
                     if (maybeABlock != null && !aSelectedList.Contains(maybeABlock)) {
                         // print("IS BLOCKED! INVALID MOVE!!!");
+                        return false;
+                    }
+                    // check if a mob exists on this position
+                    MobObject maybeAMob = GetMobOnPosition(currentPos);
+                    if (maybeAMob != null) {
                         return false;
                     }
                 }
