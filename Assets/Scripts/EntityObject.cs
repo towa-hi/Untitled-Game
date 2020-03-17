@@ -7,6 +7,10 @@ public abstract class EntityObject : MonoBehaviour {
     public Vector2Int size;
     public Renderer myRenderer;
 
+    void Awake() {
+        this.myRenderer = GetComponent<Renderer>();
+    }
+
     public Vector2Int GetSize() {
         return this.size;
     }
@@ -18,5 +22,4 @@ public abstract class EntityObject : MonoBehaviour {
     public bool IsInsideSelf(Vector2Int aPos) {
         return GameUtil.IsInside(aPos, this.pos, this.size);
     }
-
 }

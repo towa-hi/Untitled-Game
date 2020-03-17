@@ -10,7 +10,7 @@ public class BoardManager : Singleton<BoardManager> {
     public int strokes = 0;
     public List<BlockObject> blockList;
     public List<BlockObject> selectedList;
-    public List<EntityObject> entityList;
+    public List<MobObject> mobList;
     public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
     public MouseStateEnum mouseState = MouseStateEnum.UNCLICKED;
     public TimeStateEnum timeState = TimeStateEnum.NORMAL;
@@ -40,6 +40,7 @@ public class BoardManager : Singleton<BoardManager> {
         this.levelData = LevelData.GenerateTestLevel();
         this.blockList = BlockDataListToBlockObjectList(this.levelData.blockDataList);
         this.background = CreateBackground();
+        CreatePlayer();
     }
 
     static List<BlockObject> BlockDataListToBlockObjectList(List<BlockData> aBlockDataList) {
@@ -80,7 +81,7 @@ public class BoardManager : Singleton<BoardManager> {
                             mapString += "<color=grey>█</color>";
                         }
                     }
-                } else if (GetEntityOnPosition(currentPos) != null) {
+                } else if (GetMobOnPosition(currentPos) != null) {
                     mapString += "<color=yellow>█</color>";
                 } else {
                     mapString += "░";
@@ -171,6 +172,11 @@ public class BoardManager : Singleton<BoardManager> {
         DebugTextSet();
     }
 
+    void FixedUpdate() {
+        foreach (MobObject mob in this.mobList) {
+            
+        }
+    }
     void SetSelectedListState(BlockStateEnum aState) {
         foreach (BlockObject block in this.selectedList) {
             block.SetState(aState);
@@ -223,23 +229,16 @@ public class BoardManager : Singleton<BoardManager> {
         return null;
     }
 
-    // void CreatePlayer() {
-    //     //TODO figure out why this doesnt work
-    //     player = Instantiate(this.playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<MobObject>() as MobObject;
-    //     MobData mobData = ScriptableObject.CreateInstance("MobData") as MobData;
-    //     mobData.Init(new Vector2Int(2,3));
-    //     player.Init(new Vector2Int(5, 16), mobData);
-    //     this.entityList.Add(player);
-    // }
+    void CreatePlayer() {
+        //TODO figure out why this doesnt work
+        player = Instantiate(this.playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<MobObject>() as MobObject;
+        Vector2Int startingPos = new Vector2Int(5, 16);
+        MobData playerData = MobData.GeneratePlayer(startingPos);
+        player.Init(playerData);
+        this.mobList.Add(player);
+    }
 
     void SnapToPosition(Vector2Int aOffset) {
-        // if (GameUtil.IsInside(GameUtil.V3ToV2I(this.mousePos), Vector2Int.zero, this.levelData.boardSize)) {
-        //     foreach (BlockObject block in this.selectedList) {
-        //         Vector2Int newPos = block.pos + aOffset;
-        //         block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
-        //         block.ghostPos = newPos;
-        //     }
-        // }
         foreach (BlockObject block in this.selectedList) {
             Vector2Int newPos = block.pos + aOffset;
             block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
@@ -288,10 +287,10 @@ public class BoardManager : Singleton<BoardManager> {
         return null;
     }
 
-    public static EntityObject GetEntityOnPosition(Vector2Int aPos) {
-        foreach (EntityObject entity in BoardManager.Instance.entityList) {
-            if (entity.IsInsideSelf(aPos)) {
-                return entity;
+    public static EntityObject GetMobOnPosition(Vector2Int aPos) {
+        foreach (MobObject mob in BoardManager.Instance.mobList) {
+            if (mob.IsInsideSelf(aPos)) {
+                return mob;
             }
         }    
         return null;
@@ -315,19 +314,23 @@ public class BoardManager : Singleton<BoardManager> {
         HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
         HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
         foreach (BlockObject block in aSelectedList) {
+            // for each position inside block
             for (int x = 0; x < block.size.x; x++) {
                 for (int y = 0; y < block.size.y; y++) {
                     Vector2Int currentPos = block.pos + aOffset + new Vector2Int(x, y);
+                    // check if in bounds of level
                     if (!GameUtil.IsInside(currentPos, Vector2Int.zero, BoardManager.Instance.levelData.boardSize)) {
                         return false;
                     }
                     BlockObject maybeABlock = GetBlockOnPosition(currentPos);
+                    // check if this position is occupied by something not itself
                     if (maybeABlock != null && !aSelectedList.Contains(maybeABlock)) {
                         // print("IS BLOCKED! INVALID MOVE!!!");
                         return false;
                     }
                 }
             }
+            // fill in checktop/checkbot positions as a list of pos that need to be checked 
             for (int x = block.ghostPos.x; x < block.ghostPos.x + block.size.x; x++) {
                 int aboveY = block.ghostPos.y + block.size.y;
                 int belowY = block.ghostPos.y - 1;

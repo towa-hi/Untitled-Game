@@ -107,8 +107,8 @@ MonoBehaviour:
   pos: {x: 0, y: 0}
   size: {x: 0, y: 0}
   myRenderer: {fileID: 0}
-  isFixed: 0
   state: 0
+  type: 0
   color: {r: 0, g: 0, b: 0, a: 0}
   ghostPos: {x: 0, y: 0}
   studMaster: {fileID: 69063176653000506, guid: 8ffb7876367a79a4cb239d66cf1a4a8d,
