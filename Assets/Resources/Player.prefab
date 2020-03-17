@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8301137179449930924}
   - component: {fileID: 8301137179449930925}
   - component: {fileID: 8301137179449930926}
-  - component: {fileID: 114015245086211318}
+  - component: {fileID: 114256897426593262}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -92,7 +92,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &114015245086211318
+--- !u!114 &114256897426593262
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,14 +101,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 8301137179449930920}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c8899e32d73dc44c86dc011078cbf99, type: 3}
+  m_Script: {fileID: 11500000, guid: 90be1e9714d21a14d92159c0e26fb840, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  entityData: {fileID: 0}
-  pos: {x: 0, y: 0}
-  objectPos: {x: 0, y: 0}
-  destination: {x: 0, y: 0}
-  state: 0
-  facing: 0
-  moveSpeed: 0
-  turnSpeed: 0

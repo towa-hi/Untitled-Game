@@ -12,15 +12,19 @@ public class BoardManager : Singleton<BoardManager> {
     public List<BlockObject> selectedList;
     public List<EntityObject> entityList;
     public Dictionary<Vector2Int, GameObject> markerDict = new Dictionary<Vector2Int, GameObject>();
-    public MouseStateEnum mouseState = MouseStateEnum.DEFAULT;
+    public MouseStateEnum mouseState = MouseStateEnum.UNCLICKED;
     public TimeStateEnum timeState = TimeStateEnum.NORMAL;
+    public SelectionStateEnum selectionState = SelectionStateEnum.UNSELECTED;
     public Vector3 mousePos;
-    public EntityObject player;
+    public Vector3 oldMousePos;
+    public MobObject player;
 
     // relevant when selecting
-    public BlockObject selectedBlock;
-    public Vector3 clickedPosition = new Vector3(0, 0, 0);
-    public Vector2Int clickOffsetV2I = Vector2Int.zero;
+    public BlockObject clickedBlock;
+    public Vector3 clickedPos;
+    public Vector3 clickOffset;
+    public Vector3 oldClickOffset;
+    public bool isValidMove;
 
     //set by editor
     public GameObject markerMaster;
@@ -32,31 +36,52 @@ public class BoardManager : Singleton<BoardManager> {
     public UnityEngine.UI.Text mapText;
     public GameObject background;
 
-    
+    void Awake() {
+        this.levelData = LevelData.GenerateTestLevel();
+        this.blockList = BlockDataListToBlockObjectList(this.levelData.blockDataList);
+        this.background = CreateBackground();
+    }
+
+    static List<BlockObject> BlockDataListToBlockObjectList(List<BlockData> aBlockDataList) {
+        List<BlockObject> newBlockList = new List<BlockObject>();
+        foreach (BlockData blockData in aBlockDataList) {
+            BlockObject newBlockObject = Instantiate(BoardManager.Instance.blockObjectMaster, GameUtil.V2IOffsetV3(blockData.size, blockData.pos), Quaternion.identity);
+            newBlockObject.Init(blockData);
+            newBlockList.Add(newBlockObject);
+        }
+        return newBlockList;
+    }
+
     void DebugTextSet() {
-        this.debugText.text =   "timeState:" + this.timeState +
+        this.debugText.text =   "timeState: " + this.timeState +
+                                "mouseState: " + this.mouseState +
+                                "\nselectionState: " + this.selectionState +
                                 "\nmousePos: " + this.mousePos + 
                                 "\nmousePosV2I: " + GameUtil.V3ToV2I(this.mousePos) + 
-                                "\nclickedPosition: " + GameUtil.V3ToV2I(this.clickedPosition) + 
-                                "\nclickOffsetV2I: " + this.clickOffsetV2I;
+                                "\nclickedPos: " + this.clickedPos +
+                                "\nclickedPositionV2I: " + GameUtil.V3ToV2I(this.clickedPos) + 
+                                "\nclickOffset: " + this.clickOffset +
+                                "\nclickedBlock: " + this.clickedBlock;
         string mapString = "";
 
-        Dictionary<Vector2Int, BlockObject> dataDict = DataToDict();
         for (int y = levelData.boardSize.y - 1; y >= 0; y--) {
             for (int x = 0; x < levelData.boardSize.x; x++) {
                 Vector2Int currentPos = new Vector2Int(x, y);
-                if (dataDict.ContainsKey(currentPos)) {
-                    if (dataDict[currentPos].blockData.type == BlockTypeEnum.FIXED) {
+                BlockObject maybeABlock = GetBlockOnPosition(currentPos);
+                if (maybeABlock != null) {
+                    if (maybeABlock.type == BlockTypeEnum.FIXED) {
                         mapString += "<color=black>█</color>";
                     } else {
-                        if (dataDict[currentPos].stateEnum == BlockStateEnum.GHOST) {
+                        if (maybeABlock.state == BlockStateEnum.GHOST) {
                             mapString += "<color=blue>▓</color>";
+                        } else if (maybeABlock.state == BlockStateEnum.INVALID) {
+                            mapString += "<color=red>▓</color>";
                         } else {
-                            mapString += "<color=green>█</color>";
+                            mapString += "<color=grey>█</color>";
                         }
                     }
                 } else if (GetEntityOnPosition(currentPos) != null) {
-                    mapString += "<color=red>█</color>";
+                    mapString += "<color=yellow>█</color>";
                 } else {
                     mapString += "░";
                 }
@@ -66,196 +91,166 @@ public class BoardManager : Singleton<BoardManager> {
         this.mapText.text = mapString;
     }
 
-    Dictionary<Vector2Int, BlockObject> DataToDict() {
-        Dictionary<Vector2Int, BlockObject> dataDict = new Dictionary<Vector2Int, BlockObject>();
-        foreach(BlockObject block in this.blockList) {
-            for (int x = block.pos.x; x < block.pos.x + block.blockData.size.x; x++) {
-                for (int y = block.pos.y; y < block.pos.y + block.blockData.size.y; y++) {
-                    Vector2Int currentPos = new Vector2Int(x,y);
-                    dataDict[currentPos] = block;
-                }
-            }
-        }
-        return dataDict;
-    }
-
-    void CreatePlayer() {
-        //TODO figure out why this doesnt work
-        player = Instantiate(this.playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<EntityObject>();
-        player.Init(new Vector2Int(5,16));
-        this.entityList.Add(player);
-    }
-
-    void Awake() {
-        this.levelData = LevelData.GenerateTestLevel(); 
-        this.blockList = LevelDataToBlockList(this.levelData);
-        CreateBackground();
-    }
-
-    void Start() {
-        print("started");
-        CreatePlayer();
-    }
-
     void Update() {
-        // TODO: optimize this to not be dumb
         this.mousePos = GetMousePos();
-
+        
         if (Input.GetMouseButtonDown(0)) {
-            //if first time mouse clicked
-            if  (this.mouseState == MouseStateEnum.DEFAULT) {
-                this.mouseState = MouseStateEnum.CLICKED;
-                this.clickedPosition = this.mousePos;
-                this.selectedBlock = GetBlockOnPosition(GameUtil.V3ToV2I(this.mousePos));
-            } 
-        } else if (Input.GetMouseButtonUp(0)) {
-            //if let go
-            if (this.mouseState == MouseStateEnum.HOLDING) {
-                //place blocks down here
-                if (CheckValidMove(this.clickOffsetV2I)) {
-                    foreach (BlockObject block in this.selectedList) {
-                        block.pos = block.ghostPos;
-                    }
-                } else {
-                    foreach (BlockObject block in this.selectedList) {
-                        block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, block.pos);
-                        block.ghostPos = block.pos;
-                    }
-                }
-                // clear selection stuff
-                this.selectedBlock = null;
-                UnGhostSelected();
-                this.selectedList.Clear();
-                this.timeState = TimeStateEnum.NORMAL;
-            }
-            this.clickedPosition = new Vector3(0, 0, 0);
-            this.mouseState = MouseStateEnum.DEFAULT;
+            OnClickDown();
         }
+        
+        if (Input.GetMouseButtonUp(0)) {
+            OnClickRelease();
+        }
+
         switch (this.mouseState) {
-            case MouseStateEnum.DEFAULT:
+            case MouseStateEnum.UNCLICKED:
                 break;
             case MouseStateEnum.CLICKED:
-                if (this.selectedBlock != null) {
-                    if (this.mousePos.y > this.clickedPosition.y + 0.5) {
-                        //dragging up
-                        if (!IsBlocked(true, this.selectedBlock)) {
-                            this.timeState = TimeStateEnum.PAUSED;
-                            this.mouseState = MouseStateEnum.HOLDING;
-                            this.selectedList = SelectUp(this.selectedBlock);
-                            GhostSelected();
-                        }
-                    } else if (this.mousePos.y < this.clickedPosition.y - 0.5) {
-                        //dragging down
-                        if (!IsBlocked(false, this.selectedBlock)) {
-                            this.timeState = TimeStateEnum.PAUSED;
-                            this.mouseState = MouseStateEnum.HOLDING;
-                            this.selectedList = SelectDown(this.selectedBlock);
-                            GhostSelected();
-                        }
-                    }
-                }
+
                 break;
-            case MouseStateEnum.HOLDING:
-                // TODO: make it so it follows the cursor freely when placement state is floating
-                this.clickOffsetV2I = GameUtil.V3ToV2I(this.mousePos - this.clickedPosition);
-                SnapToPosition(this.clickOffsetV2I);
-                if (CheckValidMove(this.clickOffsetV2I)) {
-                    foreach (BlockObject block in selectedList) {
-                        block.Highlight(Color.blue);
-                    }
-                } else {
-                    foreach (BlockObject block in selectedList) {
-                        block.Highlight(Color.red);
+            case MouseStateEnum.HELD:
+                float dragThreshold = 0.2f;
+                this.clickOffset = this.mousePos - this.clickedPos;
+                // TODO: use clickoffset here instead of an arbitrary dragthreshold
+                if (this.clickedBlock != null && this.clickedBlock.state == BlockStateEnum.ACTIVE) {
+                    if (this.mousePos.y > this.clickedPos.y + dragThreshold) {
+                        //dragging up
+                        if (!IsBlocked(true, this.clickedBlock)) {
+                            SelectBlocks(SelectUp(this.clickedBlock));
+                        }
+                    } else if (this.mousePos.y < this.clickedPos.y - dragThreshold) {
+                        //dragging down
+                        if (!IsBlocked(false, this.clickedBlock)) {
+                            SelectBlocks(SelectDown(this.clickedBlock));
+                        }
                     }
                 }
                 break;
         }
-    DebugTextSet();
+
+        switch (this.selectionState) {
+            case SelectionStateEnum.HOLDING:
+                // only do every time mouse cursor moves between tiles
+                if (GameUtil.V3ToV2I(this.clickOffset) != GameUtil.V3ToV2I(this.oldClickOffset)) {
+                    SnapToPosition(GameUtil.V3ToV2I(this.clickOffset));
+                    this.isValidMove = CheckValidMove(GameUtil.V3ToV2I(this.clickOffset), this.selectedList);
+                    foreach (BlockObject block in selectedList) {
+                        if (this.isValidMove) {
+                            block.SetState(BlockStateEnum.GHOST);
+                        } else {
+                            block.SetState(BlockStateEnum.INVALID);
+                        }
+                    }
+                    if (this.isValidMove) {
+                        SetSelectedListState(BlockStateEnum.GHOST);
+                    } else {
+                        SetSelectedListState(BlockStateEnum.INVALID);
+                    }
+                }
+                break;
+            case SelectionStateEnum.INVALID:
+                break;
+            case SelectionStateEnum.SELECTED:
+                break;
+            case SelectionStateEnum.UNSELECTED:
+                break;
+        }
+        
+        this.oldClickOffset = this.clickOffset;
+        DebugTextSet();
+    }
+
+    void SetSelectedListState(BlockStateEnum aState) {
+        foreach (BlockObject block in this.selectedList) {
+            block.SetState(aState);
+        }
+    }
+    
+
+    void SelectBlocks(List<BlockObject> aBlockList) {
+        this.timeState = TimeStateEnum.PAUSED;
+        this.selectionState = SelectionStateEnum.HOLDING;
+        this.selectedList = aBlockList;
+        foreach (BlockObject block in this.selectedList) {
+            block.SetState(BlockStateEnum.GHOST);
+        }
+    }
+
+    void DeselectBlocks() {
+        this.selectionState = SelectionStateEnum.UNSELECTED;
+        if (isValidMove) {
+            foreach (BlockObject block in this.selectedList) {
+                block.pos = block.ghostPos;
+                block.SetState(BlockStateEnum.ACTIVE);
+            }
+        } else {
+            foreach (BlockObject block in this.selectedList) {
+                block.transform.position = GameUtil.V2IOffsetV3(block.size, block.pos);
+                block.ghostPos = block.pos;
+                block.SetState(BlockStateEnum.ACTIVE);
+            }
+        }
+        this.selectedList = null;
+        this.timeState = TimeStateEnum.NORMAL;
+    }
+
+    void OnClickDown() {
+        this.mouseState = MouseStateEnum.HELD;
+        this.clickedPos = GetMousePos();
+        this.clickedBlock = GetClickedBlock();
+    }
+
+    void OnClickRelease() {
+        this.mouseState = MouseStateEnum.UNCLICKED;
+        this.clickedBlock = null;
+        this.clickedPos = new Vector3(0, 0, 0);
+        if (this.selectionState == SelectionStateEnum.HOLDING) {
+            DeselectBlocks();
+        }
+    }
+
+    BlockObject GetClickedBlock() {
+        RaycastHit[] hits;
+        hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 100);
+        foreach (RaycastHit hit in hits) {
+            if (hit.transform.gameObject.tag == "Block") {
+                return hit.transform.gameObject.GetComponent<BlockObject>();
+            }
+        }
+        return null;
+    }
+
+    // void CreatePlayer() {
+    //     //TODO figure out why this doesnt work
+    //     player = Instantiate(this.playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<MobObject>() as MobObject;
+    //     MobData mobData = ScriptableObject.CreateInstance("MobData") as MobData;
+    //     mobData.Init(new Vector2Int(2,3));
+    //     player.Init(new Vector2Int(5, 16), mobData);
+    //     this.entityList.Add(player);
+    // }
+
+    void SnapToPosition(Vector2Int aOffset) {
+        if (GameUtil.IsInside(GameUtil.V3ToV2I(this.mousePos), Vector2Int.zero, this.levelData.boardSize)) {
+            foreach (BlockObject block in this.selectedList) {
+                Vector2Int newPos = block.pos + aOffset;
+                block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
+                block.ghostPos = newPos;
+            }
+        }
+    }
+
+    GameObject CreateBackground() {
+        Vector3 backgroundOffset = new Vector3(0, 0, 1);
+        Vector3 backgroundThiccness = new Vector3(0, 0, 0.1f);
+        GameObject newBackground = Instantiate(this.backgroundMaster, GameUtil.V2IOffsetV3(this.levelData.boardSize, Vector2Int.zero) + backgroundOffset, Quaternion.identity);
+        newBackground.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + backgroundThiccness;
+        return newBackground;
     }
 
     public void AddMarker(Vector2Int aPos, Color aColor) {
         Vector3 markerpos = GameUtil.V2IToV3(aPos) + new Vector3(0.5f, 0.75f, 0);
         GameObject marker = Instantiate(this.markerMaster, markerpos, Quaternion.identity);
         marker.GetComponent<Renderer>().material.color = aColor;
-    }
-
-    // make this less shitty later
-    static bool CheckValidMove(Vector2Int aOffset) {
-        HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
-        HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
-        foreach (BlockObject block in BoardManager.Instance.selectedList) {
-            for (int x = 0; x < block.blockData.size.x; x++) {
-                for (int y = 0; y < block.blockData.size.y; y++) {
-                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + aOffset + new Vector2Int(x,y));
-                    if (maybeABlock != null && !BoardManager.Instance.selectedList.Contains(maybeABlock)) {
-                        // print("IS BLOCKED! INVALID MOVE!!!");
-                        return false;
-                    }
-                }
-            }
-            for (int x = block.ghostPos.x; x < block.ghostPos.x + block.blockData.size.x; x++) {
-                int aboveY = block.ghostPos.y + block.blockData.size.y;
-                int belowY = block.ghostPos.y - 1;
-                Vector2Int topPos = new Vector2Int(x, aboveY);
-                Vector2Int botPos = new Vector2Int(x, belowY);
-                foreach (BlockObject otherBlock in BoardManager.Instance.selectedList) {
-                    if (GetSelectedBlockOnPosition(topPos) == null) {
-                        Vector2Int checkPos = new Vector2Int(x,aboveY);
-                        if (GetSelectedBlockOnPosition(topPos + Vector2Int.up) == null) {
-                            checkTopPositions.Add(checkPos);
-                        }
-                    }
-                    if (GetSelectedBlockOnPosition(botPos) == null) {
-                        Vector2Int checkPos = new Vector2Int(x,belowY);
-                        if (GetSelectedBlockOnPosition(botPos + Vector2Int.down) == null) {
-                            checkBotPositions.Add(checkPos);
-                        }
-                    }
-                }
-            }
-        }
-        bool connectedOnTop = false;
-        bool connectedOnBot = false;
-
-        foreach (Vector2Int pos in checkTopPositions) {
-            if (GetBlockOnPosition(pos) != null && !BoardManager.Instance.selectedList.Contains(GetBlockOnPosition(pos))) {
-                connectedOnTop = true;
-                // print("connected on top at" + pos);
-            }
-        }
-        foreach (Vector2Int pos in checkBotPositions) {
-            if (GetBlockOnPosition(pos) != null && !BoardManager.Instance.selectedList.Contains(GetBlockOnPosition(pos))) {
-                connectedOnBot = true;
-                // print("connected on bot at" + pos);
-            }
-        }
-        if (connectedOnTop == true && connectedOnBot == true) {
-            // print("IS SANDWICHED! INVALID MOVE!!!");
-            return false;
-        } else if (connectedOnTop == false && connectedOnBot == false) {
-            // print("IS FLOATING! INVALID MOVE!!!");
-            return false;
-        } else {
-            // print ("VALID MOVE");
-            return true;
-        }
-    }
-
-    void SnapToPosition(Vector2Int aOffset) {
-        if (GameUtil.IsInside(GameUtil.V3ToV2I(this.mousePos), Vector2Int.zero, this.levelData.boardSize)) {
-            foreach (BlockObject block in this.selectedList) {
-                Vector2Int newPos = block.pos + aOffset;
-                block.transform.position = GameUtil.V2IOffsetV3(block.blockData.size, newPos);
-                block.ghostPos = newPos;
-            }
-        }
-    }
-
-    void CreateBackground() {
-        Vector3 backgroundOffset = new Vector3(0, 0, 1);
-        Vector3 backgroundThiccness = new Vector3(0, 0, 0.1f);
-        this.background = Instantiate(this.backgroundMaster, GameUtil.V2IOffsetV3(this.levelData.boardSize, Vector2Int.zero) + backgroundOffset, Quaternion.identity);
-        this.background.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + backgroundThiccness;
     }
 
     public void DestroyMarkers() {
@@ -275,24 +270,10 @@ public class BoardManager : Singleton<BoardManager> {
         }
     }
 
-    static List<BlockObject> LevelDataToBlockList(LevelData aLevelData) {
-        List<BlockObject> newBlockList = new List<BlockObject>();
-        foreach (KeyValuePair<BlockData, BlockState> pair in aLevelData.blockDataDict) {
-            newBlockList.Add(CreateBlockObject(pair.Key, pair.Value));
-        }
-        return newBlockList;
-    }
-
-    static BlockObject CreateBlockObject(BlockData aBlockData, BlockState aBlockState) {
-        BlockObject newBlockObject = Instantiate(BoardManager.Instance.blockObjectMaster, GameUtil.V2IOffsetV3(aBlockData.size, aBlockState.pos), Quaternion.identity);
-        newBlockObject.Init(aBlockData, aBlockState);
-        return newBlockObject;
-    }
-
     // returns block occupying a grid position
     public static BlockObject GetBlockOnPosition(Vector2Int aPos) {
         foreach (BlockObject block in BoardManager.Instance.blockList) {
-            if (block.CheckSelfPos(aPos)) {
+            if (block.IsInsideSelf(aPos)) {
                 return block;
             }
         }
@@ -301,7 +282,7 @@ public class BoardManager : Singleton<BoardManager> {
 
     public static EntityObject GetEntityOnPosition(Vector2Int aPos) {
         foreach (EntityObject entity in BoardManager.Instance.entityList) {
-            if (entity.CheckSelfPos(aPos)) {
+            if (entity.IsInsideSelf(aPos)) {
                 return entity;
             }
         }    
@@ -310,27 +291,77 @@ public class BoardManager : Singleton<BoardManager> {
 
     public static BlockObject GetSelectedBlockOnPosition(Vector2Int aPos) {
         foreach (BlockObject block in BoardManager.Instance.selectedList) {
-            if (block.CheckGhostPos(aPos)) {
+            if (block.IsInsideSelf(aPos)) {
                 return block;
             }
         }
         return null;
     }
 
-    void GhostSelected() {
-        foreach (BlockObject block in this.selectedList) {
-            block.SetState(BlockStateEnum.GHOST);
-        }
-    }
-
-    void UnGhostSelected() {
-        foreach (BlockObject block in this.selectedList) {
-            block.SetState(BlockStateEnum.ACTIVE);
-        }
-    }
-
     // BLOCK SELECTION FUNCTIONS
     // returns true if block cant be pulled from the direction of isUp
+
+    // make this less shitty later
+    static bool CheckValidMove(Vector2Int aOffset, List<BlockObject> aSelectedList) {
+        HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
+        foreach (BlockObject block in aSelectedList) {
+            for (int x = 0; x < block.size.x; x++) {
+                for (int y = 0; y < block.size.y; y++) {
+                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + aOffset + new Vector2Int(x,y));
+                    if (maybeABlock != null && !aSelectedList.Contains(maybeABlock)) {
+                        // print("IS BLOCKED! INVALID MOVE!!!");
+                        return false;
+                    }
+                }
+            }
+            for (int x = block.ghostPos.x; x < block.ghostPos.x + block.size.x; x++) {
+                int aboveY = block.ghostPos.y + block.size.y;
+                int belowY = block.ghostPos.y - 1;
+                Vector2Int topPos = new Vector2Int(x, aboveY);
+                Vector2Int botPos = new Vector2Int(x, belowY);
+                foreach (BlockObject otherBlock in aSelectedList) {
+                    if (GetSelectedBlockOnPosition(topPos) == null) {
+                        Vector2Int checkPos = new Vector2Int(x,aboveY);
+                        if (GetSelectedBlockOnPosition(topPos + Vector2Int.up) == null) {
+                            checkTopPositions.Add(checkPos);
+                        }
+                    }
+                    if (GetSelectedBlockOnPosition(botPos) == null) {
+                        Vector2Int checkPos = new Vector2Int(x,belowY);
+                        if (GetSelectedBlockOnPosition(botPos + Vector2Int.down) == null) {
+                            checkBotPositions.Add(checkPos);
+                        }
+                    }
+                }
+            }
+        }
+        bool connectedOnTop = false;
+        bool connectedOnBot = false;
+
+        foreach (Vector2Int pos in checkTopPositions) {
+            if (GetBlockOnPosition(pos) != null && !aSelectedList.Contains(GetBlockOnPosition(pos))) {
+                connectedOnTop = true;
+                // print("connected on top at" + pos);
+            }
+        }
+        foreach (Vector2Int pos in checkBotPositions) {
+            if (GetBlockOnPosition(pos) != null && !aSelectedList.Contains(GetBlockOnPosition(pos))) {
+                connectedOnBot = true;
+                // print("connected on bot at" + pos);
+            }
+        }
+        if (connectedOnTop == true && connectedOnBot == true) {
+            // print("IS SANDWICHED! INVALID MOVE!!!");
+            return false;
+        } else if (connectedOnTop == false && connectedOnBot == false) {
+            // print("IS FLOATING! INVALID MOVE!!!");
+            return false;
+        } else {
+            // print ("VALID MOVE");
+            return true;
+        }
+    }
 
     static bool IsBlocked(bool aIsUp, BlockObject aBlock) {
         bool isBlocked = false;
@@ -345,7 +376,7 @@ public class BoardManager : Singleton<BoardManager> {
         void CheckSelectUpRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
-                if (rBlock.blockData.type == BlockTypeEnum.FIXED) {
+                if (rBlock.state == BlockStateEnum.FIXED) {
                     isBlocked = true;
                     return;
                 }
@@ -361,7 +392,7 @@ public class BoardManager : Singleton<BoardManager> {
         void CheckSelectDownRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
-                if (rBlock.blockData.type == BlockTypeEnum.FIXED) {
+                if (rBlock.state == BlockStateEnum.FIXED ) {
                     isBlocked = true;
                     return;
                 }
@@ -423,7 +454,7 @@ public class BoardManager : Singleton<BoardManager> {
         void treeUpRecursive(BlockObject block, List<BlockObject> list) {
             list.Add(block);
             foreach (BlockObject currentBlock in GetBlocksAbove(block)) {
-                if (currentBlock.blockData.type == BlockTypeEnum.FREE && !list.Contains(currentBlock)) {
+                if (currentBlock.state == BlockStateEnum.ACTIVE && !list.Contains(currentBlock)) {
                     treeUpRecursive(currentBlock, list);
                 }
             }
@@ -439,7 +470,7 @@ public class BoardManager : Singleton<BoardManager> {
         void treeDownRecursive(BlockObject block, List<BlockObject> list) {
             list.Add(block);
             foreach (BlockObject currentBlock in GetBlocksBelow(block)) {
-                if (currentBlock.blockData.type == BlockTypeEnum.FREE && !list.Contains(currentBlock)) {
+                if (currentBlock.state == BlockStateEnum.ACTIVE && !list.Contains(currentBlock)) {
                     treeDownRecursive(currentBlock, list);
                 }
             }
@@ -455,7 +486,7 @@ public class BoardManager : Singleton<BoardManager> {
 
         void IsConnectedToFixedRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             rIgnoreList.Add(rBlock);
-            if (rBlock.blockData.type == BlockTypeEnum.FIXED) {
+            if (rBlock.state == BlockStateEnum.FIXED) {
                 isConnectedToFixed = true;
                 return;
             }
@@ -504,8 +535,8 @@ public class BoardManager : Singleton<BoardManager> {
     // returns a list of blocks directly above block
     static List<BlockObject> GetBlocksAbove(BlockObject aBlock) {
         HashSet<BlockObject> aboveSet = new HashSet<BlockObject>();
-        for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.blockData.size.x; x++) {
-            int y = aBlock.pos.y + aBlock.blockData.size.y;
+        for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.size.x; x++) {
+            int y = aBlock.pos.y + aBlock.size.y;
             Vector2Int currentPos = new Vector2Int(x,y);
             BlockObject maybeABlock = GetBlockOnPosition(currentPos);
             if (maybeABlock != null) {
@@ -518,7 +549,7 @@ public class BoardManager : Singleton<BoardManager> {
     // returns a list of blocks directly below block
     static List<BlockObject> GetBlocksBelow(BlockObject aBlock) {
         HashSet<BlockObject> belowSet = new HashSet<BlockObject>();
-        for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.blockData.size.x; x++) {
+        for (int x = aBlock.pos.x; x < aBlock.pos.x + aBlock.size.x; x++) {
             int y = aBlock.pos.y - 1;
             Vector2Int currentPos = new Vector2Int(x,y);
             BlockObject maybeABlock = GetBlockOnPosition(currentPos);

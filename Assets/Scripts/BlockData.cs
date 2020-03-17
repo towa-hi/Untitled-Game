@@ -4,10 +4,14 @@ using UnityEngine;
 
 public class BlockData : ScriptableObject {
     public Vector2Int size;
+    public Vector2Int pos;
+    public Color color;
     public BlockTypeEnum type;
-    public void Init(int width, int height, BlockTypeEnum type) {
-        this.size = new Vector2Int(width, height);
-        this.type = type;
+
+    public void Init(Vector2Int aSize, Vector2Int aPos, Color aColor, BlockTypeEnum aType) {
+        this.size = aSize;
+        this.pos = aPos;
+        this.color = aColor;
+        this.type = aType;
     }
 }
-

@@ -1,5 +1,7 @@
 ﻿public enum BlockStateEnum {
     NONE,
     ACTIVE,
-    GHOST
+    GHOST,
+    INVALID,
+    FIXED,
 }
