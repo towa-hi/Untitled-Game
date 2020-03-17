@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameUtil {
 
-    static double BLOCKHEIGHT = 1.5;
+    static float BLOCKHEIGHT = 1.5f;
 
     // convert a Vector2Int point to Vector3 point with 0 as z 
     public static Vector3 V2IToV3(Vector2Int aPos) {
@@ -18,7 +18,7 @@ public class GameUtil {
     }
     // convert a Vector3 to a Vector2Int ignoring z
     public static Vector2Int V3ToV2I(Vector3 aPos) {
-        return new Vector2Int((int)aPos.x, (int)(aPos.y * 1.0/GameUtil.BLOCKHEIGHT));
+        return new Vector2Int((int) Mathf.Floor(aPos.x), (int) Mathf.Floor(aPos.y * 1.0f/GameUtil.BLOCKHEIGHT));
     }
     //check if a vector2int is within the bounds of two other vector2ints
     public static bool IsInside(Vector2Int aPos, Vector2Int aOrigin, Vector2Int aSize) {

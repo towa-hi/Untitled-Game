@@ -95,11 +95,18 @@ public class BoardManager : Singleton<BoardManager> {
         this.mousePos = GetMousePos();
         
         if (Input.GetMouseButtonDown(0)) {
+            this.mouseState = MouseStateEnum.HELD;
             OnClickDown();
         }
         
         if (Input.GetMouseButtonUp(0)) {
+            this.mouseState = MouseStateEnum.UNCLICKED;
             OnClickRelease();
+            if (this.selectionState == SelectionStateEnum.HOLDING) {
+                DeselectBlocks();
+                this.selectionState = SelectionStateEnum.UNSELECTED;
+                this.timeState = TimeStateEnum.NORMAL;
+            }
         }
 
         switch (this.mouseState) {
@@ -117,11 +124,15 @@ public class BoardManager : Singleton<BoardManager> {
                         //dragging up
                         if (!IsBlocked(true, this.clickedBlock)) {
                             SelectBlocks(SelectUp(this.clickedBlock));
+                            this.timeState = TimeStateEnum.PAUSED;
+                            this.selectionState = SelectionStateEnum.HOLDING;
                         }
                     } else if (this.mousePos.y < this.clickedPos.y - dragThreshold) {
                         //dragging down
                         if (!IsBlocked(false, this.clickedBlock)) {
                             SelectBlocks(SelectDown(this.clickedBlock));
+                            this.timeState = TimeStateEnum.PAUSED;
+                            this.selectionState = SelectionStateEnum.HOLDING;
                         }
                     }
                 }
@@ -168,8 +179,6 @@ public class BoardManager : Singleton<BoardManager> {
     
 
     void SelectBlocks(List<BlockObject> aBlockList) {
-        this.timeState = TimeStateEnum.PAUSED;
-        this.selectionState = SelectionStateEnum.HOLDING;
         this.selectedList = aBlockList;
         foreach (BlockObject block in this.selectedList) {
             block.SetState(BlockStateEnum.GHOST);
@@ -177,7 +186,6 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     void DeselectBlocks() {
-        this.selectionState = SelectionStateEnum.UNSELECTED;
         if (isValidMove) {
             foreach (BlockObject block in this.selectedList) {
                 block.pos = block.ghostPos;
@@ -191,22 +199,17 @@ public class BoardManager : Singleton<BoardManager> {
             }
         }
         this.selectedList = null;
-        this.timeState = TimeStateEnum.NORMAL;
+        
     }
 
     void OnClickDown() {
-        this.mouseState = MouseStateEnum.HELD;
         this.clickedPos = GetMousePos();
         this.clickedBlock = GetClickedBlock();
     }
 
     void OnClickRelease() {
-        this.mouseState = MouseStateEnum.UNCLICKED;
-        this.clickedBlock = null;
         this.clickedPos = new Vector3(0, 0, 0);
-        if (this.selectionState == SelectionStateEnum.HOLDING) {
-            DeselectBlocks();
-        }
+        this.clickedBlock = null;
     }
 
     BlockObject GetClickedBlock() {
@@ -230,12 +233,17 @@ public class BoardManager : Singleton<BoardManager> {
     // }
 
     void SnapToPosition(Vector2Int aOffset) {
-        if (GameUtil.IsInside(GameUtil.V3ToV2I(this.mousePos), Vector2Int.zero, this.levelData.boardSize)) {
-            foreach (BlockObject block in this.selectedList) {
-                Vector2Int newPos = block.pos + aOffset;
-                block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
-                block.ghostPos = newPos;
-            }
+        // if (GameUtil.IsInside(GameUtil.V3ToV2I(this.mousePos), Vector2Int.zero, this.levelData.boardSize)) {
+        //     foreach (BlockObject block in this.selectedList) {
+        //         Vector2Int newPos = block.pos + aOffset;
+        //         block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
+        //         block.ghostPos = newPos;
+        //     }
+        // }
+        foreach (BlockObject block in this.selectedList) {
+            Vector2Int newPos = block.pos + aOffset;
+            block.transform.position = GameUtil.V2IOffsetV3(block.size, newPos);
+            block.ghostPos = newPos;
         }
     }
 
@@ -301,6 +309,7 @@ public class BoardManager : Singleton<BoardManager> {
     // BLOCK SELECTION FUNCTIONS
     // returns true if block cant be pulled from the direction of isUp
 
+
     // make this less shitty later
     static bool CheckValidMove(Vector2Int aOffset, List<BlockObject> aSelectedList) {
         HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
@@ -308,7 +317,11 @@ public class BoardManager : Singleton<BoardManager> {
         foreach (BlockObject block in aSelectedList) {
             for (int x = 0; x < block.size.x; x++) {
                 for (int y = 0; y < block.size.y; y++) {
-                    BlockObject maybeABlock = GetBlockOnPosition(block.pos + aOffset + new Vector2Int(x,y));
+                    Vector2Int currentPos = block.pos + aOffset + new Vector2Int(x, y);
+                    if (!GameUtil.IsInside(currentPos, Vector2Int.zero, BoardManager.Instance.levelData.boardSize)) {
+                        return false;
+                    }
+                    BlockObject maybeABlock = GetBlockOnPosition(currentPos);
                     if (maybeABlock != null && !aSelectedList.Contains(maybeABlock)) {
                         // print("IS BLOCKED! INVALID MOVE!!!");
                         return false;
