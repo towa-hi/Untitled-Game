@@ -172,11 +172,6 @@ public class BoardManager : Singleton<BoardManager> {
         DebugTextSet();
     }
 
-    void FixedUpdate() {
-        foreach (MobObject mob in this.mobList) {
-            mob.DoNext();
-        }
-    }
     void SetSelectedListState(BlockStateEnum aState) {
         foreach (BlockObject block in this.selectedList) {
             block.SetState(aState);
@@ -232,7 +227,7 @@ public class BoardManager : Singleton<BoardManager> {
     void CreatePlayer() {
         //TODO figure out why this doesnt work
         player = Instantiate(this.playerMaster, GameUtil.V2IOffsetV3(new Vector2Int(2,3), new Vector2Int(7,1)), Quaternion.identity).GetComponent<MobObject>() as MobObject;
-        Vector2Int startingPos = new Vector2Int(5, 16);
+        Vector2Int startingPos = new Vector2Int(1, 16);
         MobData playerData = MobData.GeneratePlayer(startingPos);
         player.Init(playerData);
         this.mobList.Add(player);

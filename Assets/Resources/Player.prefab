@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 8301137179449930925}
   - component: {fileID: 8301137179449930926}
   - component: {fileID: 114256897426593262}
+  - component: {fileID: 114284006266267606}
+  - component: {fileID: 114776631875924070}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -104,3 +106,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90be1e9714d21a14d92159c0e26fb840, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pos: {x: 0, y: 0}
+  size: {x: 0, y: 0}
+  facing: {x: 0, y: 0}
+  myRenderer: {fileID: 0}
+  locomotionState: 0
+  destinationPos: {x: 0, y: 0}
+  turnSpeed: 0
+--- !u!114 &114284006266267606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8301137179449930920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 763c0087a370c05489ed738ff566fe74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entity: {fileID: 114256897426593262}
+  fallTime: 1
+--- !u!114 &114776631875924070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8301137179449930920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c67d0e2f805661409a1dd5270f9da50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entity: {fileID: 0}
+  walkSpeed: 1

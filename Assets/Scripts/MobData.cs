@@ -7,9 +7,10 @@ public class MobData : EntityData {
     public float moveSpeed;
     public float turnSpeed;
     
-    public void Init(Vector2Int aSize, Vector2Int aPos, float aMoveSpeed, float aTurnSpeed) {
+    public void Init(Vector2Int aSize, Vector2Int aPos, Vector2Int aFacing, float aMoveSpeed, float aTurnSpeed) {
         this.size = aSize;
         this.pos = aPos;
+        this.facing = aFacing;
         this.moveSpeed = aMoveSpeed;
         this.turnSpeed = aTurnSpeed;
     }
@@ -17,7 +18,7 @@ public class MobData : EntityData {
     public static MobData GeneratePlayer(Vector2Int aStartingPos) {
         MobData playerData = ScriptableObject.CreateInstance("MobData") as MobData;
         Vector2Int playerSize = new Vector2Int(2, 3);
-        playerData.Init(playerSize, aStartingPos, 1f, 1f);
+        playerData.Init(playerSize, aStartingPos, Vector2Int.right, 1f, 1f);
         return playerData;
     }
 
