@@ -14,7 +14,8 @@ public abstract class IComponent : MonoBehaviour {
     public bool CheckFloor(Vector2Int aOffset) {
         bool hasFloor = false;
         for (int x = this.entity.pos.x + aOffset.x; x < this.entity.pos.x + aOffset.x + this.entity.size.x; x++) {
-            Vector2Int checkPos = new Vector2Int(x, this.entity.pos.y - 1);
+            int y = this.entity.pos.y + aOffset.y;
+            Vector2Int checkPos = new Vector2Int(x, y - 1);
             BlockObject maybeABlock = BoardManager.GetBlockOnPosition(checkPos);
             if (maybeABlock != null) {
                 hasFloor = true;
@@ -30,8 +31,6 @@ public abstract class IComponent : MonoBehaviour {
             for (int y = this.entity.pos.y +aOffset.y; y < this.entity.pos.y + aOffset.y + this.entity.size.y; y++) {
                 Vector2Int checkPos = new Vector2Int(x, y);
                 BlockObject maybeABlock = BoardManager.GetBlockOnPosition(checkPos);
-                print(checkPos);
-                print(maybeABlock);
                 MobObject maybeAMob = BoardManager.GetMobOnPosition(checkPos);
                 if (maybeABlock != null) {
                     return false;

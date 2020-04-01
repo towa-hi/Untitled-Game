@@ -9,29 +9,32 @@ public class IFallable : IComponent {
     float t;
 
     void Update() {
-        if (entity.locomotionState == LocomotionStateEnum.READY) {
-            Init();
+        if (this.entity.locomotionState == LocomotionStateEnum.READY) {
+            if (!CheckFloor(Vector2Int.zero)) {
+                this.entity.locomotionState = LocomotionStateEnum.FALLING;
+                this.startPos = this.transform.position;
+                this.entity.pos += Vector2Int.down;
+                this.endPos = GameUtil.V2IOffsetV3(this.entity.size, this.entity.pos);
+                this.t = 0f;
+            }
         }
 
         if (entity.locomotionState == LocomotionStateEnum.FALLING) {
-            t += Time.deltaTime / fallTime;
-            entity.gameObject.transform.position = Vector3.Lerp(startPos, endPos, t);
-            if (t >= 1f) {
+            this.t += Time.deltaTime / this.fallTime;
+            this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
+            if (this.t >= 1f) {
                 this.entity.locomotionState = LocomotionStateEnum.READY;
                 this.entity.gameObject.transform.position = endPos;
-                Init();
+                //check if fall finished and then do it again if not
+                if (!CheckFloor(Vector2Int.zero)) {
+                    this.entity.locomotionState = LocomotionStateEnum.FALLING;
+                    this.startPos = this.transform.position;
+                    this.entity.pos += Vector2Int.down;
+                    this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
+                    this.t = 0f;
+                }
+                
             }
-        }
-    }
-
-    void Init() {
-        if (!CheckFloor(Vector2Int.zero)) {
-            this.entity.locomotionState = LocomotionStateEnum.FALLING;
-            this.startPos = GameUtil.V2IOffsetV3(entity.size, entity.pos);
-            this.entity.pos += Vector2Int.down;
-            this.endPos = GameUtil.V2IOffsetV3(entity.size, entity.pos);
-            this.t = 0f;
-            // entity.locomotationState = LocomotionStateEnum.READY;
         }
     }
 }

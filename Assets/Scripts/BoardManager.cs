@@ -70,7 +70,7 @@ public class BoardManager : Singleton<BoardManager> {
                 Vector2Int currentPos = new Vector2Int(x, y);
                 BlockObject maybeABlock = GetBlockOnPosition(currentPos);
                 if (maybeABlock != null) {
-                    if (maybeABlock.type == BlockTypeEnum.FIXED) {
+                    if (maybeABlock.state == BlockStateEnum.FIXED) {
                         mapString += "<color=black>█</color>";
                     } else {
                         if (maybeABlock.state == BlockStateEnum.GHOST) {
@@ -144,6 +144,23 @@ public class BoardManager : Singleton<BoardManager> {
             case SelectionStateEnum.HOLDING:
                 // only do every time mouse cursor moves between tiles
                 if (GameUtil.V3ToV2I(this.clickOffset) != GameUtil.V3ToV2I(this.oldClickOffset)) {
+                    
+                    
+
+
+                    // // test
+                    // for (int x = 0; x < this.levelData.boardSize.x; x++) {
+                    //     for (int y = 0; y < this.levelData.boardSize.y; y++) {
+                    //         Vector2Int checkOffset = new Vector2Int(x,y) + (GameUtil.V3ToV2I(this.clickOffset) * -1);
+                    //         if (CheckValidMove(checkOffset, this.selectedList)) {
+                    //             AddMarker(new Vector2Int(x,y), Color.green);
+                    //         }
+                    //     }
+                    // }
+
+
+
+
                     SnapToPosition(GameUtil.V3ToV2I(this.clickOffset));
                     this.isValidMove = CheckValidMove(GameUtil.V3ToV2I(this.clickOffset), this.selectedList);
                     foreach (BlockObject block in selectedList) {
@@ -303,9 +320,9 @@ public class BoardManager : Singleton<BoardManager> {
     // BLOCK SELECTION FUNCTIONS
     // returns true if block cant be pulled from the direction of isUp
 
-
     // make this less shitty later
     static bool CheckValidMove(Vector2Int aOffset, List<BlockObject> aSelectedList) {
+        // print("CHECKING VALID MOVE");
         HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();
         HashSet<Vector2Int> checkBotPositions = new HashSet<Vector2Int>();
         foreach (BlockObject block in aSelectedList) {
@@ -315,6 +332,7 @@ public class BoardManager : Singleton<BoardManager> {
                     Vector2Int currentPos = block.pos + aOffset + new Vector2Int(x, y);
                     // check if in bounds of level
                     if (!GameUtil.IsInside(currentPos, Vector2Int.zero, BoardManager.Instance.levelData.boardSize)) {
+                        // print("IS BLOCKED! NOT IN LEVEL BOUNDS");
                         return false;
                     }
                     BlockObject maybeABlock = GetBlockOnPosition(currentPos);
@@ -326,6 +344,7 @@ public class BoardManager : Singleton<BoardManager> {
                     // check if a mob exists on this position
                     MobObject maybeAMob = GetMobOnPosition(currentPos);
                     if (maybeAMob != null) {
+                        // print("IS BLOCKED! MOB EXISTS HERE");
                         return false;
                     }
                 }
@@ -338,30 +357,29 @@ public class BoardManager : Singleton<BoardManager> {
                 Vector2Int botPos = new Vector2Int(x, belowY);
                 foreach (BlockObject otherBlock in aSelectedList) {
                     if (GetSelectedBlockOnPosition(topPos) == null) {
+                        // print("toppos does not contain a selected block");
                         Vector2Int checkPos = new Vector2Int(x,aboveY);
-                        if (GetSelectedBlockOnPosition(topPos + Vector2Int.up) == null) {
-                            checkTopPositions.Add(checkPos);
-                        }
+                        checkTopPositions.Add(checkPos);
                     }
                     if (GetSelectedBlockOnPosition(botPos) == null) {
+                        // print("botpos does not contain a selected block");
                         Vector2Int checkPos = new Vector2Int(x,belowY);
-                        if (GetSelectedBlockOnPosition(botPos + Vector2Int.down) == null) {
-                            checkBotPositions.Add(checkPos);
-                        }
+                        checkBotPositions.Add(checkPos);
                     }
                 }
             }
         }
         bool connectedOnTop = false;
         bool connectedOnBot = false;
-
         foreach (Vector2Int pos in checkTopPositions) {
+            // print("examining pos " + pos);
             if (GetBlockOnPosition(pos) != null && !aSelectedList.Contains(GetBlockOnPosition(pos))) {
                 connectedOnTop = true;
                 // print("connected on top at" + pos);
             }
         }
         foreach (Vector2Int pos in checkBotPositions) {
+            // print("examining pos " + pos);
             if (GetBlockOnPosition(pos) != null && !aSelectedList.Contains(GetBlockOnPosition(pos))) {
                 connectedOnBot = true;
                 // print("connected on bot at" + pos);
