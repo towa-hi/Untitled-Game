@@ -18,7 +18,7 @@ public class BoardManager : Singleton<BoardManager> {
     public Vector3 mousePos;
     public Vector3 oldMousePos;
     public MobObject player;
-
+    public List<BlockObject> tempFixedBlockList;
     // relevant when selecting
     public BlockObject clickedBlock;
     public Vector3 clickedPos;
@@ -93,6 +93,9 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     void Update() {
+        // TODO make this less dumb
+        FixTreeDownFromPlayer();
+
         this.mousePos = GetMousePos();
         
         if (Input.GetMouseButtonDown(0)) {
@@ -144,23 +147,6 @@ public class BoardManager : Singleton<BoardManager> {
             case SelectionStateEnum.HOLDING:
                 // only do every time mouse cursor moves between tiles
                 if (GameUtil.V3ToV2I(this.clickOffset) != GameUtil.V3ToV2I(this.oldClickOffset)) {
-                    
-                    
-
-
-                    // // test
-                    // for (int x = 0; x < this.levelData.boardSize.x; x++) {
-                    //     for (int y = 0; y < this.levelData.boardSize.y; y++) {
-                    //         Vector2Int checkOffset = new Vector2Int(x,y) + (GameUtil.V3ToV2I(this.clickOffset) * -1);
-                    //         if (CheckValidMove(checkOffset, this.selectedList)) {
-                    //             AddMarker(new Vector2Int(x,y), Color.green);
-                    //         }
-                    //     }
-                    // }
-
-
-
-
                     SnapToPosition(GameUtil.V3ToV2I(this.clickOffset));
                     this.isValidMove = CheckValidMove(GameUtil.V3ToV2I(this.clickOffset), this.selectedList);
                     foreach (BlockObject block in selectedList) {
@@ -315,6 +301,28 @@ public class BoardManager : Singleton<BoardManager> {
             }
         }
         return null;
+    }
+
+    void FixTreeDownFromPlayer() {
+        foreach (BlockObject block in this.tempFixedBlockList) {
+            block.ResetColor();
+            if (block.type != BlockTypeEnum.FIXED) {
+                block.state = BlockStateEnum.ACTIVE;
+            }
+        }
+        this.tempFixedBlockList = new List<BlockObject>();
+        HashSet<BlockObject> blocksUnderPlayer = new HashSet<BlockObject>();
+        for (int x = this.player.pos.x; x < this.player.pos.x + this.player.size.x; x++) {
+            BlockObject maybeABlock = GetBlockOnPosition(new Vector2Int(x, this.player.pos.y - 1));
+            if (maybeABlock != null && maybeABlock.type != BlockTypeEnum.FIXED) {
+                blocksUnderPlayer.Add(maybeABlock);
+            }
+        }
+        this.tempFixedBlockList = blocksUnderPlayer.ToList();
+        foreach (BlockObject currentBlock in this.tempFixedBlockList) {
+            currentBlock.SetState(BlockStateEnum.FIXED);
+            currentBlock.SetColor(Color.red);
+        }
     }
 
     // BLOCK SELECTION FUNCTIONS

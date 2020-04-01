@@ -78,4 +78,11 @@ public class BlockObject : EntityObject {
             child.GetComponent<Renderer>().material.color = aColor;
         }
     }
+
+    public void ResetColor() {
+        this.myRenderer.material.color = this.color;
+        foreach (Transform child in this.transform) {
+            child.GetComponent<Renderer>().material.color = this.color;
+        }
+    }
 }

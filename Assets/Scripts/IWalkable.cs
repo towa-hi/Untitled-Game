@@ -49,8 +49,8 @@ public class IWalkable : IComponent {
             this.t += Time.deltaTime / this.walkTime;
             this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
             if (this.t >= 1f) {
-                this.entity.locomotionState = LocomotionStateEnum.READY;
                 this.entity.gameObject.transform.position = endPos;
+                this.entity.locomotionState = LocomotionStateEnum.READY;
             }
         }
 
