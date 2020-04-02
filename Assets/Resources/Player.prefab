@@ -15,8 +15,6 @@ GameObject:
   - component: {fileID: 114256897426593262}
   - component: {fileID: 114284006266267606}
   - component: {fileID: 114776631875924070}
-  - component: {fileID: 114792927706621084}
-  - component: {fileID: 114625086961267808}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -128,7 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entity: {fileID: 0}
-  fallTime: 1
+  fallTime: 0.5
 --- !u!114 &114776631875924070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,34 +140,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entity: {fileID: 0}
-  walkTime: 1
---- !u!114 &114792927706621084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8301137179449930920}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f66ae30d26d06214296f5c19b487074f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  entity: {fileID: 0}
-  turnTime: 1
---- !u!114 &114625086961267808
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8301137179449930920}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a738af5d32ef96d44ad03cb3d3603015, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  entity: {fileID: 0}
-  hopTime: 1
-  startPos: {x: 0, y: 0, z: 0}
-  endPos: {x: 0, y: 0, z: 0}
+  walkTime: 0.75

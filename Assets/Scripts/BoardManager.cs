@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using UnityEngine.Rendering.PostProcessing;
 
 public class BoardManager : Singleton<BoardManager> {
     // don't edit these in editor
@@ -35,6 +36,8 @@ public class BoardManager : Singleton<BoardManager> {
     public UnityEngine.UI.Text debugText;
     public UnityEngine.UI.Text mapText;
     public GameObject background;
+    public Camera camera;
+    public PostProcessVolume volume;
 
     void Awake() {
         this.levelData = LevelData.GenerateTestLevel();
@@ -55,7 +58,7 @@ public class BoardManager : Singleton<BoardManager> {
 
     void DebugTextSet() {
         this.debugText.text =   "timeState: " + this.timeState +
-                                "mouseState: " + this.mouseState +
+                                "\nmouseState: " + this.mouseState +
                                 "\nselectionState: " + this.selectionState +
                                 "\nmousePos: " + this.mousePos + 
                                 "\nmousePosV2I: " + GameUtil.V3ToV2I(this.mousePos) + 
@@ -109,7 +112,7 @@ public class BoardManager : Singleton<BoardManager> {
             if (this.selectionState == SelectionStateEnum.HOLDING) {
                 DeselectBlocks();
                 this.selectionState = SelectionStateEnum.UNSELECTED;
-                this.timeState = TimeStateEnum.NORMAL;
+                ResumeTime();
             }
         }
 
@@ -127,14 +130,14 @@ public class BoardManager : Singleton<BoardManager> {
                         //dragging up
                         if (!IsBlocked(true, this.clickedBlock)) {
                             SelectBlocks(SelectUp(this.clickedBlock));
-                            this.timeState = TimeStateEnum.PAUSED;
+                            PauseTime();
                             this.selectionState = SelectionStateEnum.HOLDING;
                         }
                     } else if (this.mousePos.y < this.clickedPos.y - dragThreshold) {
                         //dragging down
                         if (!IsBlocked(false, this.clickedBlock)) {
                             SelectBlocks(SelectDown(this.clickedBlock));
-                            this.timeState = TimeStateEnum.PAUSED;
+                            PauseTime();
                             this.selectionState = SelectionStateEnum.HOLDING;
                         }
                     }
@@ -174,6 +177,18 @@ public class BoardManager : Singleton<BoardManager> {
         DebugTextSet();
     }
 
+    void PauseTime() {
+        this.timeState = TimeStateEnum.PAUSED;
+        volume.GetComponent<PostProcessVolume>().enabled = true;
+        // volume.GetComponent<PostProcessVolume>().isGlobal = true;
+    }
+
+    void ResumeTime() {
+        this.timeState = TimeStateEnum.NORMAL;
+        volume.GetComponent<PostProcessVolume>().enabled = false;
+
+        // volume.GetComponent<PostProcessVolume>().isGlobal = false;
+    }
     void SetSelectedListState(BlockStateEnum aState) {
         foreach (BlockObject block in this.selectedList) {
             block.SetState(aState);
