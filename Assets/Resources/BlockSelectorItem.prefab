@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1634126006131401881}
   - component: {fileID: 6982362185585912737}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: BlockSelectorItemText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 7483142633955317752}
   - component: {fileID: 7483142633955317753}
   m_Layer: 5
-  m_Name: EditorPaletteListItemImage
+  m_Name: BlockSelectorItemImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -242,8 +242,10 @@ GameObject:
   - component: {fileID: 7483142634612417635}
   - component: {fileID: 7483142634612417639}
   - component: {fileID: 7483142634612417637}
+  - component: {fileID: 114415119864626466}
+  - component: {fileID: 6502857834982184502}
   m_Layer: 5
-  m_Name: EditorPaletteListItem
+  m_Name: BlockSelectorItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -286,6 +288,62 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7483142634612417632}
   m_Mesh: {fileID: 0}
+--- !u!114 &114415119864626466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7483142634612417632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f656347d169a6df4880e49a3e8558775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blockData: {fileID: 0}
+  blockSelectorItemImage: {fileID: 7483142633955317751}
+  blockSelectorItemText: {fileID: 3182182014448849093}
+  button: {fileID: 6502857834982184502}
+--- !u!114 &6502857834982184502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7483142634612417632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.6603774, g: 0.25854397, b: 0.25854397, a: 1}
+    m_PressedColor: {r: 0.52657795, g: 0, b: 0.6037736, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 7483142633955317753}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &7483142634253004958
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -296,7 +354,7 @@ PrefabInstance:
     - target: {fileID: 1366504913988344325, guid: 891b364173a00214c88e85493997594c,
         type: 3}
       propertyPath: m_Name
-      value: EditorPaletteListItemImage
+      value: BlockSelectorItemImage
       objectReference: {fileID: 0}
     - target: {fileID: 7382515667517578497, guid: 891b364173a00214c88e85493997594c,
         type: 3}

@@ -6,19 +6,34 @@ using UnityEngine.UI;
 public class UIBlockSelector : MonoBehaviour {
     public List<BlockData> blockDatas;
     public RectTransform content;
+    public GameObject blockSelectorItemMaster;
     // Start is called before the first frame update
-    void Awake() {
+    void Start() {
         this.blockDatas = GenerateBlockDatas();
-        this.content = transform.GetComponent<ScrollRect>().content;
-
+        foreach (BlockData blockData in blockDatas) {
+            GameObject newBlockSelectorItem = (GameObject)Instantiate(blockSelectorItemMaster, content);
+            UIBlockSelectorItem newUIBlockSelectorItem = newBlockSelectorItem.GetComponent<UIBlockSelectorItem>();
+            newUIBlockSelectorItem.button.onClick.AddListener(delegate {OnBlockSelectorItemButtonClick(blockData);});
+        }
     }
 
+    void OnBlockSelectorItemButtonClick(BlockData blockData) {
+        print(blockData.size);
+    }
     List<BlockData> GenerateBlockDatas() {
         List<BlockData> newBlockDatas = new List<BlockData>();
         newBlockDatas.Add(MakeBlock(4,1,0,0,BlockTypeEnum.FREE));
         newBlockDatas.Add(MakeBlock(3,1,0,0,BlockTypeEnum.FREE));
         newBlockDatas.Add(MakeBlock(2,1,0,0,BlockTypeEnum.FREE));
         newBlockDatas.Add(MakeBlock(1,1,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(4,2,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(3,2,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(2,2,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(1,2,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(4,3,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(3,3,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(2,3,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(1,3,0,0,BlockTypeEnum.FREE));
         return newBlockDatas;
     }
 
