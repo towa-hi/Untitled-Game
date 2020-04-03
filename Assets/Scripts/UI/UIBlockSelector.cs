@@ -7,13 +7,14 @@ public class UIBlockSelector : MonoBehaviour {
     public List<BlockData> blockDatas;
     public RectTransform content;
     public GameObject blockSelectorItemMaster;
-    
+
     void Start() {
         this.blockDatas = GenerateBlockDatas();
         foreach (BlockData blockData in blockDatas) {
             GameObject newBlockSelectorItem = (GameObject)Instantiate(blockSelectorItemMaster, content);
             UIBlockSelectorItem newUIBlockSelectorItem = newBlockSelectorItem.GetComponent<UIBlockSelectorItem>();
-            newUIBlockSelectorItem.button.onClick.AddListener(delegate {OnBlockSelectorItemButtonClick(blockData);});
+            newUIBlockSelectorItem.Init(blockData);
+            newUIBlockSelectorItem.button.onClick.AddListener(delegate {OnBlockSelectorItemButtonClick(newUIBlockSelectorItem.blockData);});
         }
     }
 
