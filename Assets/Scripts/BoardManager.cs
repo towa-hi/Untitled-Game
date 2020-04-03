@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.EventSystems;
 
 public class BoardManager : Singleton<BoardManager> {
     // don't edit these in editor
@@ -36,7 +37,6 @@ public class BoardManager : Singleton<BoardManager> {
     public UnityEngine.UI.Text debugText;
     public UnityEngine.UI.Text mapText;
     public GameObject background;
-    public Camera camera;
     public PostProcessVolume volume;
 
     void Awake() {
@@ -97,11 +97,11 @@ public class BoardManager : Singleton<BoardManager> {
 
     void Update() {
         // TODO make this less dumb
-        FixTreeDownFromPlayer();
+        FixBlocksBelowEntity();
 
         this.mousePos = GetMousePos();
         
-        if (Input.GetMouseButtonDown(0)) {
+        if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject()) {
             this.mouseState = MouseStateEnum.HELD;
             OnClickDown();
         }
@@ -316,7 +316,7 @@ public class BoardManager : Singleton<BoardManager> {
     }
 
     // TODO optimize this to not do every frame
-    void FixTreeDownFromPlayer() {
+    void FixBlocksBelowEntity() {
         foreach (BlockObject block in this.tempFixedBlockList) {
             block.ResetColor();
             if (block.type != BlockTypeEnum.FIXED) {
@@ -334,7 +334,6 @@ public class BoardManager : Singleton<BoardManager> {
         this.tempFixedBlockList = blocksUnderPlayer.ToList();
         foreach (BlockObject currentBlock in this.tempFixedBlockList) {
             currentBlock.SetState(BlockStateEnum.FIXED);
-            currentBlock.SetColor(Color.red);
         }
     }
 
