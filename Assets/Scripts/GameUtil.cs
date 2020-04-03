@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameUtil {
 
-    static float BLOCKHEIGHT = 1.5f;
+    static public float BLOCKHEIGHT = 1.5f;
 
     // convert a Vector2Int point to Vector3 point with 0 as z 
     public static Vector3 V2IToV3(Vector2Int aPos) {

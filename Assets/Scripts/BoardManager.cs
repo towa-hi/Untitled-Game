@@ -174,7 +174,7 @@ public class BoardManager : Singleton<BoardManager> {
         }
         
         this.oldClickOffset = this.clickOffset;
-        // DebugTextSet();
+        DebugTextSet();
     }
 
     void PauseTime() {
