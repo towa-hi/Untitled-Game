@@ -13,12 +13,6 @@ public class UIBlockSelectorItem : MonoBehaviour {
     public void Init(BlockData aBlockData) {
         this.blockData = aBlockData;
         this.blockSelectorItemText.GetComponent<TMP_Text>().text = this.blockData.size.ToString() + " Block";
-        // button.onClick.AddListener(OnClick);
     }
-
-    void OnClick() {
-        print("i clicked");
-    }
-
     
 }

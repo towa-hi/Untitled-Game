@@ -7,7 +7,7 @@ public class UIBlockSelector : MonoBehaviour {
     public List<BlockData> blockDatas;
     public RectTransform content;
     public GameObject blockSelectorItemMaster;
-    // Start is called before the first frame update
+    
     void Start() {
         this.blockDatas = GenerateBlockDatas();
         foreach (BlockData blockData in blockDatas) {
@@ -17,8 +17,8 @@ public class UIBlockSelector : MonoBehaviour {
         }
     }
 
-    void OnBlockSelectorItemButtonClick(BlockData blockData) {
-        print(blockData.size);
+    void OnBlockSelectorItemButtonClick(BlockData aBlockData) {
+        print(aBlockData.size);
     }
     List<BlockData> GenerateBlockDatas() {
         List<BlockData> newBlockDatas = new List<BlockData>();
