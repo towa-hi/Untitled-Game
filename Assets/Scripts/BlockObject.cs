@@ -7,7 +7,7 @@ public class BlockObject : EntityObject {
     public BlockStateEnum state;
     public BlockTypeEnum type;
     public Color color;
-
+    public bool isUnderEntity;
     // move this to its own component later
     public Vector2Int ghostPos;
 
@@ -20,6 +20,7 @@ public class BlockObject : EntityObject {
         this.ghostPos = aBlockData.pos;
         this.type = aBlockData.type;
         this.color = aBlockData.color;
+        this.isUnderEntity = false;
 
         this.name = "Block size: " + this.size + " startingpos: " + this.pos;
         myRenderer = GetComponent<Renderer>();
@@ -83,6 +84,20 @@ public class BlockObject : EntityObject {
         this.myRenderer.material.color = this.color;
         foreach (Transform child in this.transform) {
             child.GetComponent<Renderer>().material.color = this.color;
+        }
+    }
+
+    public void SmoothMove(Vector3 aDestination) {
+        StartCoroutine(MoveCoroutine(aDestination));
+    }
+
+    public IEnumerator MoveCoroutine(Vector3 aDestination) {
+        Vector3 currentPos = transform.position;
+        float t = 0f;
+        while (t < 1) {
+            t += Time.deltaTime / 0.1f;
+            transform.position = Vector3.Lerp(currentPos, aDestination, t);
+            yield return null;
         }
     }
 }

@@ -21,6 +21,7 @@ public class BoardManager : Singleton<BoardManager> {
     public Vector3 oldMousePos;
     public MobObject player;
     public List<BlockObject> tempFixedBlockList;
+    public List<BlockObject> blocksUnderEntitiesList;
     // relevant when selecting
     public BlockObject clickedBlock;
     public Vector3 clickedPos;
@@ -80,6 +81,8 @@ public class BoardManager : Singleton<BoardManager> {
                             mapString += "<color=blue>▓</color>";
                         } else if (maybeABlock.state == BlockStateEnum.INVALID) {
                             mapString += "<color=red>▓</color>";
+                        } else if (maybeABlock.isUnderEntity == true) {
+                            mapString += "<color=purple>█</color>";
                         } else {
                             mapString += "<color=grey>█</color>";
                         }
@@ -128,6 +131,8 @@ public class BoardManager : Singleton<BoardManager> {
                 if (this.clickedBlock != null && this.clickedBlock.state == BlockStateEnum.ACTIVE) {
                     if (this.mousePos.y > this.clickedPos.y + dragThreshold) {
                         //dragging up
+
+                        // TODO make this not check every frame
                         if (!IsBlocked(true, this.clickedBlock)) {
                             SelectBlocks(SelectUp(this.clickedBlock));
                             PauseTime();
@@ -319,22 +324,23 @@ public class BoardManager : Singleton<BoardManager> {
     void FixBlocksBelowEntity() {
         foreach (BlockObject block in this.tempFixedBlockList) {
             block.ResetColor();
-            if (block.type != BlockTypeEnum.FIXED) {
-                block.state = BlockStateEnum.ACTIVE;
-            }
+            block.isUnderEntity = false;
         }
         this.tempFixedBlockList = new List<BlockObject>();
         HashSet<BlockObject> blocksUnderPlayer = new HashSet<BlockObject>();
         for (int x = this.player.pos.x; x < this.player.pos.x + this.player.size.x; x++) {
             BlockObject maybeABlock = GetBlockOnPosition(new Vector2Int(x, this.player.pos.y - 1));
-            if (maybeABlock != null && maybeABlock.type != BlockTypeEnum.FIXED) {
+            if (maybeABlock != null) {
+                maybeABlock.isUnderEntity = true;
                 blocksUnderPlayer.Add(maybeABlock);
+                blocksUnderEntitiesList.Add(maybeABlock);
+
             }
         }
         this.tempFixedBlockList = blocksUnderPlayer.ToList();
-        foreach (BlockObject currentBlock in this.tempFixedBlockList) {
-            currentBlock.SetState(BlockStateEnum.FIXED);
-        }
+        // foreach (BlockObject currentBlock in this.tempFixedBlockList) {
+        //     currentBlock.SetState(BlockStateEnum.FIXED);
+        // }
     }
 
     // BLOCK SELECTION FUNCTIONS
@@ -422,15 +428,27 @@ public class BoardManager : Singleton<BoardManager> {
         List<BlockObject> ignoreList = new List<BlockObject>();
         if (aIsUp) {
             CheckSelectUpRecursive(aBlock, ignoreList);
+            foreach (BlockObject selectedBlock in SelectUp(aBlock)) {
+                if (selectedBlock.isUnderEntity) {
+                    print("selection blocked because " + selectedBlock.name + " is under an entity");
+                    isBlocked = true;
+                }
+            }
         } else {
             CheckSelectDownRecursive(aBlock, ignoreList);
+            foreach (BlockObject selectedBlock in SelectDown(aBlock)) {
+                if (selectedBlock.isUnderEntity) {
+                    print("selection blocked because " + selectedBlock.name + " is under an entity");
+                    isBlocked = true;
+                }
+            }
         }
         return isBlocked;
 
         void CheckSelectUpRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
-                if (rBlock.state == BlockStateEnum.FIXED) {
+                if (rBlock.state == BlockStateEnum.FIXED  || rBlock.isUnderEntity == true) {
                     isBlocked = true;
                     return;
                 }
@@ -446,13 +464,13 @@ public class BoardManager : Singleton<BoardManager> {
         void CheckSelectDownRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
-                if (rBlock.state == BlockStateEnum.FIXED ) {
+                if (rBlock.state == BlockStateEnum.FIXED || rBlock.isUnderEntity == true) {
                     isBlocked = true;
                     return;
                 }
-                foreach (BlockObject aboveBlock in GetBlocksBelow(rBlock)) {
-                    if (!rIgnoreList.Contains(aboveBlock)) {
-                        CheckSelectDownRecursive(aboveBlock, rIgnoreList);
+                foreach (BlockObject belowBlock in GetBlocksBelow(rBlock)) {
+                    if (!rIgnoreList.Contains(belowBlock)) {
+                        CheckSelectDownRecursive(belowBlock, rIgnoreList);
                     }
                 }
             }
