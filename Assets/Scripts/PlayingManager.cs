@@ -27,13 +27,13 @@ public class PlayingManager : Singleton<PlayingManager> {
                         if (this.clickedBlock != null && this.clickedBlock.state == BlockStateEnum.ACTIVE) {
                             if (GameManager.Instance.dragOffset.y > PlayingManager.dragThreshold) {
                                 // dragging up
-                                print("dragging up block");
+                                print("PlayingManager - dragging up block: " + clickedBlock);
                                 PauseTime();
                                 SelectBlocks(BoardManager.SelectUp(this.clickedBlock));
                                 this.selectionState = SelectionStateEnum.HOLDING;
                             } else if (GameManager.Instance.dragOffset.y < PlayingManager.dragThreshold * -1) {
                                 // dragging down
-                                print("dragging down block");
+                                print("PlayingManager - dragging down block: " + clickedBlock);
                                 PauseTime();
                                 SelectBlocks(BoardManager.SelectDown(this.clickedBlock));
                                 this.selectionState = SelectionStateEnum.HOLDING;
@@ -147,9 +147,4 @@ public class PlayingManager : Singleton<PlayingManager> {
         }
         return null; 
     }
-    // BLOCK SELECTION FUNCTIONS
-    // returns true if block cant be pulled from the direction of isUp
-
-    // make this less shitty later
-
 }

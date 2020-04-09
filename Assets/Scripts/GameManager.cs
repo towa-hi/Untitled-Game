@@ -20,10 +20,9 @@ public class GameManager : Singleton<GameManager> {
     }
 
     void Update() {
-        //set mousePos for this frame.
+        // this Update() must run before anything else.
         this.oldMousePos = this.mousePos;
         this.mousePos = GetMousePos();
-        // this switch must run first. 
         // changes CLICKED to HELD and UNCLICKED to DEFAULT after a new frame begins
         switch (this.mouseState) {
             case MouseStateEnum.CLICKED:
@@ -31,6 +30,7 @@ public class GameManager : Singleton<GameManager> {
                 break;
             case MouseStateEnum.UNCLICKED:
                 this.dragOffset = Vector3.zero;
+                this.oldDragOffset = Vector3.zero;
                 this.clickedPos = Vector3.zero;
                 this.mouseState = MouseStateEnum.DEFAULT;
                 break;
@@ -47,7 +47,7 @@ public class GameManager : Singleton<GameManager> {
                 break;
             case MouseStateEnum.CLICKED:
                 // runs once for one frame before mouseState changes to HELD
-                print("GameManger - clicked:" + this.mousePos);
+                print("GameManger - clicked: " + this.mousePos);
                 this.clickedPos = this.mousePos;
                 OnClickDown();
                 break;
@@ -57,8 +57,8 @@ public class GameManager : Singleton<GameManager> {
                 OnHoldUpdate();
                 break;
             case MouseStateEnum.UNCLICKED:
-                // this should only happen for one frame before mouseState changes to DEFAULT
-                print("GameManger - unclicked:" + this.mousePos +  " offset:" + this.dragOffset);
+                // runs once for one frame before mouseState changes to DEFAULT
+                print("GameManger - unclicked: " + this.mousePos +  " offset: " + this.dragOffset);
                 OnUnclick();
                 break;
         }
