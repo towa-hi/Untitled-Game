@@ -8,6 +8,7 @@ public class LevelData : ScriptableObject {
     public string creator;
     public Vector2Int boardSize;
     public List<BlockData> blockDataList;
+    public List<MobData> mobDataList;
 
     public static LevelData GenerateTestLevel() {
         LevelData testLevel = ScriptableObject.CreateInstance("LevelData") as LevelData;
@@ -16,6 +17,7 @@ public class LevelData : ScriptableObject {
         testLevel.creator = "test";
         testLevel.boardSize = new Vector2Int(20,20);
         testLevel.blockDataList = new List<BlockData>();
+        testLevel.mobDataList = new List<MobData>();
 
         AddBlock(3,3,1,1, BlockTypeEnum.FREE, testLevel);
         AddBlock(3,1,4,1, BlockTypeEnum.FREE, testLevel);
@@ -46,6 +48,8 @@ public class LevelData : ScriptableObject {
         AddBlock(1,1,5,14, BlockTypeEnum.FREE, testLevel);
         AddBlock(1,2,4,10, BlockTypeEnum.FREE, testLevel);
         AddBlock(1,1,5,10, BlockTypeEnum.FREE, testLevel);
+        AddPlayer(1, 16, testLevel);
+
         return testLevel;
     }
 
@@ -56,6 +60,13 @@ public class LevelData : ScriptableObject {
         aLevelData.blockDataList.Add(testBlockData);
     }
 
+    public static void AddPlayer(int aX, int aY, LevelData aLevelData) {
+        Vector2Int startingPos = new Vector2Int(aX, aY);
+        MobData playerData = ScriptableObject.CreateInstance("MobData") as MobData;
+        Vector2Int playerSize = new Vector2Int(2, 3);
+        playerData.Init(playerSize, startingPos, Vector2Int.right, MobTypeEnum.PLAYER);
+        aLevelData.mobDataList.Add(playerData);
+    }
     public static Color RandomColor() {
         return UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
     }

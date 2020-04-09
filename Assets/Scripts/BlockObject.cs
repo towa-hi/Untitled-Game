@@ -13,6 +13,7 @@ public class BlockObject : EntityObject {
 
     // set by editor
     public GameObject studMaster;
+    public float smoothMoveSpeed;
 
     public void Init (BlockData aBlockData) {
         this.size = aBlockData.size;
@@ -23,11 +24,9 @@ public class BlockObject : EntityObject {
         this.isUnderEntity = false;
 
         this.name = "Block size: " + this.size + " startingpos: " + this.pos;
-        myRenderer = GetComponent<Renderer>();
 
-        Vector3 thiccness = new Vector3(0,0,2f);
+        Vector3 thiccness = new Vector3(0, 0, 2f);
         transform.localScale = GameUtil.V2IToV3(this.size) + thiccness;
-        myRenderer.material.color = this.color;
 
         switch (this.type) {
             case BlockTypeEnum.FREE:
@@ -95,7 +94,7 @@ public class BlockObject : EntityObject {
         Vector3 currentPos = transform.position;
         float t = 0f;
         while (t < 1) {
-            t += Time.deltaTime / 0.1f;
+            t += Time.deltaTime / this.smoothMoveSpeed;
             transform.position = Vector3.Lerp(currentPos, aDestination, t);
             yield return null;
         }

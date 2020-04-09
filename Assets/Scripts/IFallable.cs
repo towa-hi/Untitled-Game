@@ -9,7 +9,7 @@ public class IFallable : IComponent {
     float t;
 
     void Update() {
-        if (BoardManager.Instance.timeState == TimeStateEnum.NORMAL) {
+        if (PlayingManager.Instance.timeState == TimeStateEnum.NORMAL) {
             if (this.entity.locomotionState == LocomotionStateEnum.READY) {
                 if (!CheckFloor(Vector2Int.zero)) {
                     this.entity.locomotionState = LocomotionStateEnum.FALLING;

@@ -6,20 +6,22 @@ public class MobData : EntityData {
     public Vector2Int facing;
     public float moveSpeed;
     public float turnSpeed;
+    public MobTypeEnum mobType;
     
-    public void Init(Vector2Int aSize, Vector2Int aPos, Vector2Int aFacing, float aMoveSpeed, float aTurnSpeed) {
+    public void Init(Vector2Int aSize, Vector2Int aPos, Vector2Int aFacing, MobTypeEnum aMobType) {
         this.size = aSize;
         this.pos = aPos;
         this.facing = aFacing;
-        this.moveSpeed = aMoveSpeed;
-        this.turnSpeed = aTurnSpeed;
+        this.mobType = aMobType;
+        switch (this.mobType) {
+            case MobTypeEnum.PLAYER:
+                this.moveSpeed = 1f;
+                this.turnSpeed = 1f;
+                break;
+            case MobTypeEnum.SHUFFLEBOT:
+                this.moveSpeed = 1f;
+                this.turnSpeed = 0f;
+                break;
+        }
     }
-
-    public static MobData GeneratePlayer(Vector2Int aStartingPos) {
-        MobData playerData = ScriptableObject.CreateInstance("MobData") as MobData;
-        Vector2Int playerSize = new Vector2Int(2, 3);
-        playerData.Init(playerSize, aStartingPos, Vector2Int.right, 1f, 1f);
-        return playerData;
-    }
-
 }

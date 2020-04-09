@@ -1,5 +1,6 @@
 ﻿public enum MouseStateEnum {
-    UNCLICKED,
+    DEFAULT,
     CLICKED,
     HELD,
+    UNCLICKED,
 }

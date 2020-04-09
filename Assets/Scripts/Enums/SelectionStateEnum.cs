@@ -1,6 +1,5 @@
 ﻿public enum SelectionStateEnum {
-    UNSELECTED,
+    DEFAULT,
     INVALID,
     HOLDING,
-    SELECTED,
 }
