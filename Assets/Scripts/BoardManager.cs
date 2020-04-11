@@ -10,18 +10,24 @@ public class BoardManager : Singleton<BoardManager> {
     public LevelData levelData;
     public GameManager gameManager;
     public List<BlockObject> blockList;
+    public List<BlockObject> tempFixedBlockList;
     public List<MobObject> mobList;
+
     public MobObject player;
 
     public BlockObject blockMaster;
     public MobObject mobMaster;
+    public MobObject playerMaster;
     public GameObject backgroundMaster;
 
     
     void Awake() {
         this.gameManager = GameManager.Instance;
     }
+
     void Update() {
+        // TODO: make this call the frame an entity moves to a new position and not here
+        FixBlocksBelowEntity();
         switch (this.gameManager.mouseState) {
             case MouseStateEnum.DEFAULT:
                 break;
@@ -50,14 +56,44 @@ public class BoardManager : Singleton<BoardManager> {
             this.blockList.Add(newBlockObject);
         }
         foreach (MobData mobData in aLevelData.mobDataList) {
-            MobObject newMobObject = Instantiate(this.mobMaster, GameUtil.V2IOffsetV3(mobData.size, mobData.pos), Quaternion.identity);
+            MobObject mobPrefab = this.mobMaster; 
+            switch (mobData.mobPrefabName) {
+                case "Player":
+                        mobPrefab = this.playerMaster;
+                    break;
+            }
+            
+            MobObject newMobObject = Instantiate(mobPrefab, GameUtil.V2IOffsetV3(mobData.size, mobData.pos), Quaternion.identity);
             newMobObject.transform.parent = this.transform;
             newMobObject.Init(mobData);
             this.mobList.Add(newMobObject);
-            if (newMobObject.mobType == MobTypeEnum.PLAYER) {
+            if (newMobObject.tag == "MyPlayer") {
                 this.player = newMobObject;
             }
         }
+    }
+
+    public void FixBlocksBelowEntity() {
+        foreach (BlockObject block in this.tempFixedBlockList) {
+            block.ResetColor();
+            block.isUnderEntity = false;
+            block.state = BlockStateEnum.ACTIVE;
+        }
+        this.tempFixedBlockList = new List<BlockObject>();
+        HashSet<BlockObject> blocksUnderEntities = new HashSet<BlockObject>();
+        foreach (MobObject mobObject in mobList) {
+            if (!mobObject.canSelectUnder) {
+                for (int x = mobObject.pos.x; x < mobObject.pos.x + mobObject.size.x; x++) {
+                    BlockObject maybeABlock = GetBlockOnPosition(new Vector2Int(x, mobObject.pos.y - 1));
+                    if (maybeABlock != null && maybeABlock.state == BlockStateEnum.ACTIVE) {
+                        maybeABlock.isUnderEntity = true;
+                        maybeABlock.state = BlockStateEnum.FIXED;
+                        blocksUnderEntities.Add(maybeABlock);
+                    }
+                }
+            }
+        }
+        this.tempFixedBlockList = blocksUnderEntities.ToList();
     }
 
     public static BlockObject GetBlockOnPosition(Vector2Int aPos) {
@@ -77,6 +113,7 @@ public class BoardManager : Singleton<BoardManager> {
         }    
         return null;
     }
+
     public static bool CheckValidMove(Vector2Int aOffset, List<BlockObject> aSelectedList) {
         // print("CHECKING VALID MOVE");
         HashSet<Vector2Int> checkTopPositions = new HashSet<Vector2Int>();

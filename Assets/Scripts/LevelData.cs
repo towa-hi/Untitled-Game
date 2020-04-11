@@ -64,7 +64,7 @@ public class LevelData : ScriptableObject {
         Vector2Int startingPos = new Vector2Int(aX, aY);
         MobData playerData = ScriptableObject.CreateInstance("MobData") as MobData;
         Vector2Int playerSize = new Vector2Int(2, 3);
-        playerData.Init(playerSize, startingPos, Vector2Int.right, MobTypeEnum.PLAYER);
+        playerData.Init(playerSize, startingPos, Vector2Int.right, "Player");
         aLevelData.mobDataList.Add(playerData);
     }
     public static Color RandomColor() {

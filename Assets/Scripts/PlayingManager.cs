@@ -26,17 +26,22 @@ public class PlayingManager : Singleton<PlayingManager> {
                     case SelectionStateEnum.DEFAULT:
                         if (this.clickedBlock != null && this.clickedBlock.state == BlockStateEnum.ACTIVE) {
                             if (GameManager.Instance.dragOffset.y > PlayingManager.dragThreshold) {
-                                // dragging up
-                                print("PlayingManager - dragging up block: " + clickedBlock);
-                                PauseTime();
-                                SelectBlocks(BoardManager.SelectUp(this.clickedBlock));
-                                this.selectionState = SelectionStateEnum.HOLDING;
+                                if (!BoardManager.IsBlocked(true, this.clickedBlock)) {
+                                    // dragging up
+                                    print("PlayingManager - dragging up block: " + clickedBlock);
+                                    PauseTime();
+                                    SelectBlocks(BoardManager.SelectUp(this.clickedBlock));
+                                    this.selectionState = SelectionStateEnum.HOLDING;
+                                }
                             } else if (GameManager.Instance.dragOffset.y < PlayingManager.dragThreshold * -1) {
-                                // dragging down
-                                print("PlayingManager - dragging down block: " + clickedBlock);
-                                PauseTime();
-                                SelectBlocks(BoardManager.SelectDown(this.clickedBlock));
-                                this.selectionState = SelectionStateEnum.HOLDING;
+                                if (!BoardManager.IsBlocked(false, this.clickedBlock)) {
+                                    // dragging down
+                                    print("PlayingManager - dragging down block: " + clickedBlock);
+                                    PauseTime();
+                                    SelectBlocks(BoardManager.SelectDown(this.clickedBlock));
+                                    this.selectionState = SelectionStateEnum.HOLDING;
+                                }
+                                
                             }
                         }
                         break;
