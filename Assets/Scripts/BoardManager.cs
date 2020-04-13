@@ -216,6 +216,9 @@ public class BoardManager : Singleton<BoardManager> {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
                 if (rBlock.state == BlockStateEnum.FIXED  || rBlock.isUnderEntity == true) {
+                    if (rBlock.isUnderEntity == true) {
+                        print("BoardManager - CheckSelectUpRecursive encountered block under entity");
+                    }
                     isBlocked = true;
                     return;
                 }
@@ -232,6 +235,9 @@ public class BoardManager : Singleton<BoardManager> {
             if (isBlocked == false) {
                 rIgnoreList.Add(rBlock);
                 if (rBlock.state == BlockStateEnum.FIXED || rBlock.isUnderEntity == true) {
+                    if (rBlock.isUnderEntity == true) {
+                        print("BoardManager - CheckSelectDownRecursive encountered block under entity");
+                    }
                     isBlocked = true;
                     return;
                 }
@@ -325,7 +331,10 @@ public class BoardManager : Singleton<BoardManager> {
 
         void IsConnectedToFixedRecursive(BlockObject rBlock, List<BlockObject> rIgnoreList) {
             rIgnoreList.Add(rBlock);
-            if (rBlock.state == BlockStateEnum.FIXED) {
+            // OK so the reason why this uses BlockTypeEnum.FIXED is because
+            // a block with state = BlockStateEnum.FIXED is not always gonna be fixed
+            // so this we need to use BlockTypeEnum.FIXED or else floaters will happen
+            if (rBlock.type == BlockTypeEnum.FIXED) {
                 isConnectedToFixed = true;
                 return;
             }
