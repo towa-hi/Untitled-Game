@@ -73,6 +73,36 @@ public class BoardManager : Singleton<BoardManager> {
         }
     }
 
+    public void AddBlock(BlockObject aBlock, Vector2Int aPos) {
+        aBlock.pos = aPos;
+        this.blockList.Add(aBlock);
+
+    }
+
+    public static bool CanAddBlockHere(BlockObject aBlock, Vector2Int aPos) {
+        for (int x = aPos.x; x < aPos.x + aBlock.size.x; x++) {
+            for (int y = aPos.y; y < aPos.y +aBlock.size.y; y++) {
+                Vector2Int currentPos = new Vector2Int(x, y);
+                // if block is out of bounds
+                if (!GameUtil.IsInside(currentPos, Vector2Int.zero, BoardManager.Instance.levelData.boardSize)) {
+                    return false;
+                }
+                // if block is blocked by another block or an entity
+                foreach (BlockObject block in BoardManager.Instance.blockList) {
+                    if (block.IsInsideSelf(currentPos)) {
+                        return false;
+                    }
+                }
+                foreach (MobObject mob in BoardManager.Instance.mobList) {
+                    if (mob.IsInsideSelf(currentPos)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public void FixBlocksBelowEntity() {
         foreach (BlockObject block in this.tempFixedBlockList) {
             block.ResetColor();

@@ -82,7 +82,18 @@ public class PlayingManager : Singleton<PlayingManager> {
                 }
                 ResumeTime();
                 break;
-                
+        }
+
+        switch (this.timeState) {
+            case TimeStateEnum.NORMAL:
+                foreach (MobObject mob in BoardManager.Instance.mobList) {
+                    foreach (IComponent component in mob.componentList) {
+                        component.DoFrame();
+                    }
+                }
+                break;
+            case TimeStateEnum.PAUSED:
+                break;
         }
         
     }

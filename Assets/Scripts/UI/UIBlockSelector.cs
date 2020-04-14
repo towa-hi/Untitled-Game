@@ -35,6 +35,27 @@ public class UIBlockSelector : MonoBehaviour {
         newBlockDatas.Add(MakeBlock(3,3,0,0,BlockTypeEnum.FREE));
         newBlockDatas.Add(MakeBlock(2,3,0,0,BlockTypeEnum.FREE));
         newBlockDatas.Add(MakeBlock(1,3,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(4,4,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(3,4,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(2,4,0,0,BlockTypeEnum.FREE));
+        newBlockDatas.Add(MakeBlock(1,4,0,0,BlockTypeEnum.FREE));
+
+        newBlockDatas.Add(MakeBlock(4,1,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(3,1,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(2,1,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(1,1,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(4,2,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(3,2,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(2,2,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(1,2,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(4,3,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(3,3,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(2,3,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(1,3,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(4,4,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(3,4,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(2,4,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(1,4,0,0,BlockTypeEnum.FIXED));
         return newBlockDatas;
     }
 

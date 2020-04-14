@@ -8,7 +8,7 @@ public class IFallable : IComponent {
     Vector3 endPos;
     float t;
 
-    void Update() {
+    public override void DoFrame() {
         if (PlayingManager.Instance.timeState == TimeStateEnum.NORMAL) {
             if (this.entity.locomotionState == LocomotionStateEnum.READY) {
                 if (!CheckFloor(Vector2Int.zero)) {

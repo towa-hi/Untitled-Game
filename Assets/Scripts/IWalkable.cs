@@ -10,7 +10,7 @@ public class IWalkable : IComponent {
     float t;
     Quaternion oldRotation;
 
-    void Update() {
+    public override void DoFrame() {
         if (PlayingManager.Instance.timeState == TimeStateEnum.NORMAL) {
             if (this.entity.locomotionState == LocomotionStateEnum.READY) {
                 if (CheckPos(this.entity.facing) && CheckFloor(this.entity.facing)) {
@@ -64,6 +64,5 @@ public class IWalkable : IComponent {
                 }
             }
         }
-        
     }
 }

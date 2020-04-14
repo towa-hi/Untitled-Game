@@ -10,10 +10,15 @@ public abstract class EntityObject : MonoBehaviour {
 
     public Renderer myRenderer;
     public LocomotionStateEnum locomotionState;
+    public List<IComponent> componentList;
 
     void Awake() {
         this.myRenderer = GetComponent<Renderer>();
         this.locomotionState = LocomotionStateEnum.READY;
+        componentList = new List<IComponent>();
+        foreach (IComponent component in GetComponents(typeof(IComponent))) {
+            componentList.Add(component);
+        }
     }
 
     public Vector2Int GetSize() {

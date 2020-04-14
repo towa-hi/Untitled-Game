@@ -45,4 +45,6 @@ public abstract class IComponent : MonoBehaviour {
         }
         return isValid;
     }
+
+    public abstract void DoFrame();
 }
