@@ -111,6 +111,9 @@ MonoBehaviour:
   facing: {x: 0, y: 0}
   myRenderer: {fileID: 0}
   locomotionState: 0
+  componentList: []
+  color: {r: 0.74509805, g: 0.67058825, b: 0.11764707, a: 1}
+  isHighlighted: 0
   destinationPos: {x: 0, y: 0}
   turnSpeed: 0
   canSelectUnder: 0

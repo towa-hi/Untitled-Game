@@ -9,6 +9,7 @@ public class UIBlockSelectorItem : EventTrigger {
     public BlockData blockData;
     public GameObject blockSelectorItemImage;
     public GameObject blockSelectorItemText;
+    public BlockObject blockPreview;
     public Button button;
     public bool selected;
     public bool clicked;
@@ -18,32 +19,35 @@ public class UIBlockSelectorItem : EventTrigger {
         this.blockSelectorItemText.GetComponent<TMP_Text>().text = this.blockData.size.ToString() + " Block";
         this.selected = false;
         this.clicked = false;
-    }
-
-    public override void OnBeginDrag(PointerEventData data) {
-        print("this button clicked" + data);
+        // this.blockPreview = Instantiate(BoardManager.Instance.blockMaster, Vector3.zero, Quaternion.identity, this.transform);
+        // this.blockPreview.InitPreview(aBlockData);
         
     }
 
-    public override void OnCancel(BaseEventData data)
-    {
-        Debug.Log("OnCancel called.");
-    }
+    // public override void OnBeginDrag(PointerEventData data) {
+    //     print("this button clicked" + data);
+        
+    // }
 
-    public override void OnDeselect(BaseEventData data)
-    {
-        Debug.Log("OnDeselect called.");
-    }
+    // public override void OnCancel(BaseEventData data)
+    // {
+    //     Debug.Log("OnCancel called.");
+    // }
 
-    public override void OnDrag(PointerEventData data)
-    {
-        Debug.Log("OnDrag called.");
-    }
+    // public override void OnDeselect(BaseEventData data)
+    // {
+    //     Debug.Log("OnDeselect called.");
+    // }
 
-    public override void OnDrop(PointerEventData data)
-    {
-        Debug.Log("OnDrop called.");
-    }
+    // public override void OnDrag(PointerEventData data)
+    // {
+    //     Debug.Log("OnDrag called.");
+    // }
+
+    // public override void OnDrop(PointerEventData data)
+    // {
+    //     Debug.Log("OnDrop called.");
+    // }
 
     public override void OnPointerDown(PointerEventData data)
     {

@@ -6,7 +6,6 @@ public class BlockObject : EntityObject {
     // set by Init()
     public BlockStateEnum state;
     public BlockTypeEnum type;
-    public Color color;
     public bool isUnderEntity;
     // move this to its own component later
     public Vector2Int ghostPos;
@@ -22,11 +21,12 @@ public class BlockObject : EntityObject {
         this.type = aBlockData.type;
         this.color = aBlockData.color;
         this.isUnderEntity = false;
+        this.isHighlighted = false;
 
         this.name = "Block size: " + this.size + " startingpos: " + this.pos;
 
         Vector3 thiccness = new Vector3(0, 0, 2f);
-        transform.localScale = GameUtil.V2IToV3(this.size) + thiccness;
+        this.transform.localScale = GameUtil.V2IToV3(this.size) + thiccness;
 
         switch (this.type) {
             case BlockTypeEnum.FREE:
@@ -39,6 +39,36 @@ public class BlockObject : EntityObject {
         }
         myRenderer.material.color = this.color;
         CreateStuds();
+    }
+
+    public void InitPreview (BlockData aBlockData) {
+        this.size = aBlockData.size;
+        this.pos = Vector2Int.zero;
+        this.ghostPos = Vector2Int.zero;
+        this.type = aBlockData.type;
+        this.color = aBlockData.color;
+        this.isUnderEntity = false;
+
+        this.name = "Block size: " + this.size + " not yet added";
+
+        Vector3 thiccness = new Vector3(0, 0, 2f);
+        Transform oldParent = this.transform.parent;
+        this.transform.parent = null;
+        this.transform.localScale = GameUtil.V2IToV3(this.size) + thiccness;
+        
+        switch (this.type) {
+            case BlockTypeEnum.FREE:
+                SetState(BlockStateEnum.ACTIVE);
+                break;
+            case BlockTypeEnum.FIXED:
+                this.color = Color.gray;
+                SetState(BlockStateEnum.FIXED);
+                break;
+        }
+        myRenderer.material.color = this.color;
+        CreateStuds();
+        this.transform.parent = oldParent;
+        this.transform.localPosition = Vector3.zero;
     }
 
     public void SetState(BlockStateEnum aState) {
@@ -72,19 +102,7 @@ public class BlockObject : EntityObject {
         }
     }
 
-    public void SetColor(Color aColor) {
-        this.myRenderer.material.color = aColor;
-        foreach (Transform child in this.transform) {
-            child.GetComponent<Renderer>().material.color = aColor;
-        }
-    }
 
-    public void ResetColor() {
-        this.myRenderer.material.color = this.color;
-        foreach (Transform child in this.transform) {
-            child.GetComponent<Renderer>().material.color = this.color;
-        }
-    }
 
     public void SmoothMove(Vector3 aDestination) {
         StartCoroutine(MoveCoroutine(aDestination));
@@ -99,4 +117,6 @@ public class BlockObject : EntityObject {
             yield return null;
         }
     }
+
+
 }

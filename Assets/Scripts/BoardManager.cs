@@ -76,7 +76,15 @@ public class BoardManager : Singleton<BoardManager> {
     public void AddBlock(BlockObject aBlock, Vector2Int aPos) {
         aBlock.pos = aPos;
         this.blockList.Add(aBlock);
+    }
 
+    public void RemoveEntity(EntityObject aEntity) {
+        if (aEntity is BlockObject) {
+            blockList.Remove(aEntity as BlockObject);
+        } else if (aEntity is MobObject) {
+            mobList.Remove(aEntity as MobObject);
+        }
+        Destroy(aEntity.gameObject);
     }
 
     public static bool CanAddBlockHere(BlockObject aBlock, Vector2Int aPos) {
@@ -142,6 +150,14 @@ public class BoardManager : Singleton<BoardManager> {
             }
         }    
         return null;
+    }
+
+    public static EntityObject GetEntityOnPosition(Vector2Int aPos) {
+        EntityObject maybeAEntity = GetBlockOnPosition(aPos);
+        if (maybeAEntity == null) {
+            maybeAEntity = GetMobOnPosition(aPos);
+        }
+        return maybeAEntity;
     }
 
     public static bool CheckValidMove(Vector2Int aOffset, List<BlockObject> aSelectedList) {
