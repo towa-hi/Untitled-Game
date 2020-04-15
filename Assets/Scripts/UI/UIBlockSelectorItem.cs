@@ -49,8 +49,7 @@ public class UIBlockSelectorItem : EventTrigger {
     //     Debug.Log("OnDrop called.");
     // }
 
-    public override void OnPointerDown(PointerEventData data)
-    {
+    public override void OnPointerDown(PointerEventData data) {
         this.clicked = true;
         if (this.clicked) {
             this.selected = true;
@@ -58,8 +57,7 @@ public class UIBlockSelectorItem : EventTrigger {
         }
     }
 
-    public override void OnPointerUp(PointerEventData data)
-    {
+    public override void OnPointerUp(PointerEventData data) {
        EditorManager.Instance.BlockSelectorItemOnPointerUp();
     }
 

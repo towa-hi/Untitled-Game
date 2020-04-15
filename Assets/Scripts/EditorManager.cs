@@ -83,23 +83,32 @@ public class EditorManager : Singleton<EditorManager> {
     }
 
     public void BlockSelectorItemOnPointerDown(BlockData aBlockGhostData) {
-        print("EditorManager - PreviewBlock");
-        this.blockGhost = Instantiate(BoardManager.Instance.blockMaster);
-        this.blockGhost.Init(aBlockGhostData);
-        this.selectionState = SelectionStateEnum.HOLDING;
+        if (editMode == EditModeEnum.ADD && selectionState == SelectionStateEnum.DEFAULT) {
+            print("EditorManager - PreviewBlock");
+            this.blockGhost = Instantiate(BoardManager.Instance.blockMaster);
+            this.blockGhost.Init(aBlockGhostData);
+            this.selectionState = SelectionStateEnum.HOLDING;
+        } else {
+            throw new System.Exception("Block selector item activated but editMode != ADD");
+        }
+        
     }
 
     public void BlockSelectorItemOnPointerUp() {
-        if (BoardManager.CanAddBlockHere(this.blockGhost, GameUtil.V3ToV2I(GameManager.Instance.mousePos))) {
-            BoardManager.Instance.AddBlock(this.blockGhost, GameUtil.V3ToV2I(GameManager.Instance.mousePos));
-            this.blockGhost.transform.SetParent(transform);
+        if (editMode == EditModeEnum.ADD && selectionState == SelectionStateEnum.HOLDING) {
+            if (BoardManager.CanAddBlockHere(this.blockGhost, GameUtil.V3ToV2I(GameManager.Instance.mousePos))) {
+                BoardManager.Instance.AddBlock(this.blockGhost, GameUtil.V3ToV2I(GameManager.Instance.mousePos));
+                this.blockGhost.transform.SetParent(transform);
+            } else {
+                Destroy(this.blockGhost.gameObject);
+            }
+            this.selectionState = SelectionStateEnum.DEFAULT;
+            this.blockGhost = null;
         } else {
-            Destroy(this.blockGhost.gameObject);
+            throw new System.Exception("Block selector block preview let go but editMode != ADD");
         }
-        this.selectionState = SelectionStateEnum.DEFAULT;
-        this.blockGhost = null;
-
     }
+
     void SnapGhostToPosition(Vector2Int aPos) {
         // TODO: add hysteresis
         this.blockGhost.transform.position = GameUtil.V2IOffsetV3(this.blockGhost.size, aPos);
