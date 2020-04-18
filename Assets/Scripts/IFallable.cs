@@ -9,11 +9,6 @@ public class IFallable : IComponent {
     float t;
 
     public override void DoFrame() {
-        
-        
-        
-        
-
         if (PlayingManager.Instance.timeState == TimeStateEnum.NORMAL) {
             if (FanBelowMe()) {
                 if (CheckPos(Vector2Int.up)) {
@@ -24,25 +19,6 @@ public class IFallable : IComponent {
                     this.t = 0f;
                 }
             }
-            // if (entity.locomotionState == LocomotionStateEnum.RISING) {
-            //     this.t += Time.deltaTime / this.fallTime;
-            //     this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
-            //     if (this.t >= 1f) {
-            //         print("IFallable - completed rise");
-            //         if (CheckPos(Vector2Int.up)) {
-            //             print("IFallable - rising one more");
-            //             this.entity.locomotionState = LocomotionStateEnum.RISING;
-            //             this.startPos = this.transform.position;
-            //             this.entity.pos += Vector2Int.down;
-            //             this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
-            //             this.t = 0f;
-            //         } else {
-            //             print("IFallable - hit ceiling, now floating");
-            //             this.entity.locomotionState = LocomotionStateEnum.FLOATING;
-            //             this.entity.gameObject.transform.position = endPos;
-            //         }
-            //     }
-            // }
 
             if (this.entity.locomotionState == LocomotionStateEnum.FLOATING) {
                 if (!FanBelowMe()) {
@@ -115,16 +91,6 @@ public class IFallable : IComponent {
                             if (maybeABlock.type == BlockTypeEnum.FAN) {
                                 print("IFallable - entity is a fan" + checkPos);
                                 return true;
-                                // if (CheckPos(Vector2Int.up)) {
-                                //     print("IFallable - setting locomotionState to RISING" + checkPos);
-                                //     this.entity.locomotionState = LocomotionStateEnum.RISING;
-                                //     this.startPos = this.transform.position;
-                                //     this.entity.pos += Vector2Int.up;
-                                //     this.endPos = GameUtil.V2IOffsetV3(this.entity.size, this.entity.pos);
-                                //     this.t = 0f;
-                                // } else {
-                                //     print("IFallable - no room to rise up" + checkPos);
-                                // }
                             } else {
                                 print("IFallable - entity is not a fan. colIsBlocked" + checkPos);
                                 colIsBlocked = true;
@@ -136,7 +102,6 @@ public class IFallable : IComponent {
                         
                     } else {
                         // print("IFallable - nothing at this location");
-                        
                     }
                 } else {
                     // print("Ifallable - col is already blocked");
