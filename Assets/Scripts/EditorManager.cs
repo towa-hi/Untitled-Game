@@ -11,6 +11,7 @@ public class EditorManager : Singleton<EditorManager> {
     public GameObject placeView;
     public GameObject removeView;
     public GameObject editView;
+    public EntityObject oldHoveredEntity;
     public EntityObject hoveredEntity;
 
     void Awake() {
@@ -65,18 +66,30 @@ public class EditorManager : Singleton<EditorManager> {
     void SwitchEditModeRemove() {
         switch (GameManager.Instance.mouseState) {
             case MouseStateEnum.DEFAULT:
-                if (hoveredEntity != null) {
-                    hoveredEntity.Highlight(false);
-                }
-                hoveredEntity = BoardManager.GetEntityOnPosition(GameUtil.V3ToV2I(GameManager.Instance.mousePos));
-                if (hoveredEntity != null && hoveredEntity.isHighlighted == false) {
-                    hoveredEntity.Highlight(true);
+                this.oldHoveredEntity = this.hoveredEntity;
+                this.hoveredEntity = BoardManager.GetEntityOnPosition(GameUtil.V3ToV2I(GameManager.Instance.mousePos));
+                if (this.hoveredEntity != this.oldHoveredEntity) {
+                    if (this.oldHoveredEntity != null) {
+                        foreach (Vector2Int pos in this.oldHoveredEntity.GetOccupiedPos()) {
+                            MyGrid.Instance.ResetCell(pos);
+                        }
+                    }
+                    
+                    if (this.hoveredEntity != null) {
+                        foreach (Vector2Int pos in this.hoveredEntity.GetOccupiedPos()) {
+                            MyGrid.Instance.SetCell(pos, Color.red);
+                        }
+                    }
                 }
                 break;
             case MouseStateEnum.CLICKED:
                 EntityObject clickedEntity = BoardManager.GetEntityOnPosition(GameUtil.V3ToV2I(GameManager.Instance.clickedPos));
                 if (clickedEntity != null) {
                     BoardManager.Instance.RemoveEntity(clickedEntity);
+                    // BoardManager.Instance.HighlightEntityPosition(clickedEntity);
+                    foreach (Vector2Int pos in hoveredEntity.GetOccupiedPos()) {
+                        MyGrid.Instance.ResetCell(pos);
+                    }
                 }
                 break;
         }

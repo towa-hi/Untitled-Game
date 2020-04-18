@@ -19,6 +19,7 @@ public class BoardManager : Singleton<BoardManager> {
     public MobObject mobMaster;
     public MobObject playerMaster;
     public GameObject backgroundMaster;
+    public GameObject highlightMaster;
 
     
     void Awake() {
@@ -86,7 +87,14 @@ public class BoardManager : Singleton<BoardManager> {
         }
         Destroy(aEntity.gameObject);
     }
+// TODO
+    public void HighlightEntityPosition(EntityObject aEntity) {
+        print("highlighted a block");
+        GameObject highlight = Instantiate(highlightMaster, aEntity.transform.position + new Vector3(0, 0, -1.001f), Quaternion.identity, this.transform);
+        highlight.transform.localScale = aEntity.transform.localScale;
 
+    }
+    
     public static bool CanAddBlockHere(BlockObject aBlock, Vector2Int aPos) {
         for (int x = aPos.x; x < aPos.x + aBlock.size.x; x++) {
             for (int y = aPos.y; y < aPos.y +aBlock.size.y; y++) {

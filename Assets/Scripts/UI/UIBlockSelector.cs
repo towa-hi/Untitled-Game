@@ -56,6 +56,7 @@ public class UIBlockSelector : MonoBehaviour {
         newBlockDatas.Add(MakeBlock(3,4,0,0,BlockTypeEnum.FIXED));
         newBlockDatas.Add(MakeBlock(2,4,0,0,BlockTypeEnum.FIXED));
         newBlockDatas.Add(MakeBlock(1,4,0,0,BlockTypeEnum.FIXED));
+        newBlockDatas.Add(MakeBlock(4,1,0,0,BlockTypeEnum.FAN));
         return newBlockDatas;
     }
 

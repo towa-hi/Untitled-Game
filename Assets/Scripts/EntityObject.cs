@@ -32,6 +32,17 @@ public abstract class EntityObject : MonoBehaviour {
         return this.pos;
     }
 
+    public List<Vector2Int> GetOccupiedPos() {
+        List<Vector2Int> occupiedPosList = new List<Vector2Int>();
+        for (int x = this.pos.x; x < this.pos.x + this.size.x; x++) {
+            for (int y = this.pos.y; y < this.pos.y + this.size.y; y++) {
+                Vector2Int currentPos = new Vector2Int(x, y);
+                occupiedPosList.Add(currentPos);
+            }
+        }
+        return occupiedPosList;
+    }
+    
     public bool IsInsideSelf(Vector2Int aPos) {
         return GameUtil.IsInside(aPos, this.pos, this.size);
     }

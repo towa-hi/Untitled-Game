@@ -6,4 +6,6 @@
     JUMPING,
     FALLING,
     HOPPING,
+    RISING,
+    FLOATING,
 }
