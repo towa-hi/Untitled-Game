@@ -16,6 +16,7 @@ public class BoardManager : Singleton<BoardManager> {
     public MobObject player;
 
     public BlockObject blockMaster;
+    public BlockObject fanMaster;
     public MobObject mobMaster;
     public MobObject playerMaster;
     public GameObject backgroundMaster;
@@ -51,7 +52,13 @@ public class BoardManager : Singleton<BoardManager> {
         newBackground.transform.localScale =  GameUtil.V2IToV3(this.levelData.boardSize) + backgroundThiccness;
         newBackground.name = "Background";
         foreach (BlockData blockData in aLevelData.blockDataList) {
-            BlockObject newBlockObject = Instantiate(this.blockMaster, GameUtil.V2IOffsetV3(blockData.size, blockData.pos), Quaternion.identity);
+            BlockObject currentGameObject;
+            if (blockData.type == BlockTypeEnum.FAN) {
+                currentGameObject = this.fanMaster;
+            } else {
+                currentGameObject = this.blockMaster;
+            }
+            BlockObject newBlockObject = Instantiate(currentGameObject, GameUtil.V2IOffsetV3(blockData.size, blockData.pos), Quaternion.identity);
             newBlockObject.transform.parent = this.transform;
             newBlockObject.Init(blockData);
             this.blockList.Add(newBlockObject);

@@ -10,6 +10,7 @@ public class IFallable : IComponent {
 
     public override void DoFrame() {
         if (PlayingManager.Instance.timeState == TimeStateEnum.NORMAL) {
+            // check if there's a fan below this entity before anything else
             if (FanBelowMe()) {
                 if (CheckPos(Vector2Int.up)) {
                     this.entity.locomotionState = LocomotionStateEnum.RISING;
@@ -18,57 +19,59 @@ public class IFallable : IComponent {
                     this.endPos = GameUtil.V2IOffsetV3(this.entity.size, this.entity.pos);
                     this.t = 0f;
                 }
-            }
-
-            if (this.entity.locomotionState == LocomotionStateEnum.FLOATING) {
-                if (!FanBelowMe()) {
+            } else {
+                // if entity is already floating but there's no fan under it, set to ready so it can fall down
+                if (this.entity.locomotionState == LocomotionStateEnum.FLOATING) {
                     this.entity.locomotionState = LocomotionStateEnum.READY;
                 }
             }
-            if (this.entity.locomotionState == LocomotionStateEnum.READY) {
-                if (!CheckFloor(Vector2Int.zero)) {
-                    this.entity.locomotionState = LocomotionStateEnum.FALLING;
-                    this.startPos = this.transform.position;
-                    this.entity.pos += Vector2Int.down;
-                    this.endPos = GameUtil.V2IOffsetV3(this.entity.size, this.entity.pos);
-                    this.t = 0f;
-                }
-            }
 
-            if (entity.locomotionState == LocomotionStateEnum.FALLING) {
-                this.t += Time.deltaTime / this.fallTime;
-                this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
-                if (this.t >= 1f) {
-                    // if no floor, keep falling
+            switch (this.entity.locomotionState) {
+                case LocomotionStateEnum.READY:
                     if (!CheckFloor(Vector2Int.zero)) {
                         this.entity.locomotionState = LocomotionStateEnum.FALLING;
                         this.startPos = this.transform.position;
                         this.entity.pos += Vector2Int.down;
-                        this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
+                        this.endPos = GameUtil.V2IOffsetV3(this.entity.size, this.entity.pos);
                         this.t = 0f;
-                    } else {
-                        this.entity.locomotionState = LocomotionStateEnum.READY;
-                        this.entity.gameObject.transform.position = endPos;
                     }
-                }
-            }
-
-            if (entity.locomotionState == LocomotionStateEnum.RISING) {
-                this.t += Time.deltaTime / this.fallTime;
-                this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
-                if (this.t >= 1f) {
-                    // if no ceiling, keep rising
-                    if (CheckPos(Vector2Int.up)) {
-                        this.entity.locomotionState = LocomotionStateEnum.RISING;
-                        this.startPos = this.transform.position;
-                        this.entity.pos += Vector2Int.up;
-                        this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
-                        this.t = 0f;
-                    } else {
-                        this.entity.locomotionState = LocomotionStateEnum.FLOATING;
-                        this.entity.gameObject.transform.position = endPos;
+                    break;
+                case LocomotionStateEnum.FALLING:
+                    this.t += Time.deltaTime / this.fallTime;
+                    this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
+                    if (this.t >= 1f) {
+                        // if no floor, keep falling
+                        if (!CheckFloor(Vector2Int.zero)) {
+                            this.entity.locomotionState = LocomotionStateEnum.FALLING;
+                            this.startPos = this.transform.position;
+                            this.entity.pos += Vector2Int.down;
+                            this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
+                            this.t = 0f;
+                        } else {
+                            this.entity.locomotionState = LocomotionStateEnum.READY;
+                            this.entity.gameObject.transform.position = endPos;
+                        }
                     }
-                }
+                    break;
+                case LocomotionStateEnum.RISING:
+                    this.t += Time.deltaTime / this.fallTime;
+                    this.entity.gameObject.transform.position = Vector3.Lerp(this.startPos, this.endPos, this.t);
+                    if (this.t >= 1f) {
+                        // if no ceiling, keep rising
+                        if (CheckPos(Vector2Int.up)) {
+                            this.entity.locomotionState = LocomotionStateEnum.RISING;
+                            this.startPos = this.transform.position;
+                            this.entity.pos += Vector2Int.up;
+                            this.endPos = GameUtil.V2IOffsetV3(this.entity.size, entity.pos);
+                            this.t = 0f;
+                        } else {
+                            this.entity.locomotionState = LocomotionStateEnum.FLOATING;
+                            this.entity.gameObject.transform.position = endPos;
+                        }
+                    }
+                    break;
+                case LocomotionStateEnum.FLOATING:
+                    break;
             }
             
         }

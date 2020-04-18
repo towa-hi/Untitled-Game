@@ -114,8 +114,8 @@ MonoBehaviour:
   componentList: []
   color: {r: 0, g: 0, b: 0, a: 0}
   isHighlighted: 0
-  state: 0
-  type: 0
+  state: 1
+  type: 3
   isUnderEntity: 0
   ghostPos: {x: 0, y: 0}
   studMaster: {fileID: 69063176653000506, guid: 8ffb7876367a79a4cb239d66cf1a4a8d,
